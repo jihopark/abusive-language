@@ -3,6 +3,13 @@ import pandas as pd
 import re
 import numpy as np
 from nltk.tokenize import TweetTokenizer
+from nltk import ngrams
+from collections import Counter
+from tokenizer import to_words, to_chars
+import itertools
+from functools import reduce
+
+
 tknzr = TweetTokenizer(reduce_len=True)
 
 # minimum word count for a tweet. tweet less than this will be removed
@@ -70,6 +77,13 @@ def concat_unshared_task_datasets():
                                                             len(data["none"])))
     return data
 
+def ngram_counter(tokens, n, separator="_"):
+    grams = []
+    for i in range(1, n+1):
+        grams += list(ngrams(tokens, i))
+    grams = map(lambda x: separator.join(x), grams)
+    return Counter(grams)
+
 #TODO: create multi-class dataset split function
 
 def create_binary_dataset(x_neg, x_pos, split=[0.7, 0.15, 0.15]):
@@ -113,7 +127,56 @@ def create_binary_dataset(x_neg, x_pos, split=[0.7, 0.15, 0.15]):
 
 	return x_train, y_train, x_valid, y_valid, x_test, y_test
 
+def get_dictionaries(data, vocabulary_size):
+    index2word = ["UNK"]
+    word2index = {"UNK": 0}
+    index2freq = [0]
+    i = 1
+    for g, count in data.most_common(vocabulary_size):
+        index2word.append(g)
+        word2index[g] = i
+        index2freq.append(count)
+        i += 1
+    return index2word, word2index, index2freq
+
+
+
+def turn_into_word_ngram_matrix(datalist, n=2, vocabulary_size=10000):
+    data = list(itertools.chain(*datalist))
+    print(data[0])
+    print(data[-1])
+
+    print("\nTokenized texts into words")
+    data = list(map(lambda x: to_words(x.lower()), data))
+    print(data[0])
+    print(data[-1])
+
+    print("\nNgram-count the tokens")
+    data = list(map(lambda x: ngram_counter(x, 2), data))
+    print(data[0])
+    print(data[-1])
+
+    print("\nCreate dictionary")
+    grams = reduce(lambda x,y: x+y, data)
+    print("total ngrams: %s" % len(grams))
+
+    if len(grams) < vocabulary_size:
+        vocabulary_size = len(grams)
+
+    print("Most common:")
+    for g, count in grams.most_common(10):
+        print("%s: %7d" % (g, count))
+
+    index2word, word2index, index2freq = get_dictionaries(grams,
+            vocabulary_size)
+
+    print("index2word: %s" % index2word[:10])
+    print("index2freq: %s" % index2freq[:10])
+    #TODO: need to index make data into indexes
+
 if __name__ == '__main__':
     data = concat_unshared_task_datasets()
-    create_binary_dataset(data["none"], data["racism"])
-    create_binary_dataset(data["none"], data["sexism"],split=[0.8, 0.1, 0.1])
+    turn_into_word_ngram_matrix([data["racism"][:100], data["none"][:100]])
+
+    #create_binary_dataset(data["none"], data["racism"])
+    #create_binary_dataset(data["none"], data["sexism"],split=[0.8, 0.1, 0.1])
