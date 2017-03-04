@@ -43,6 +43,6 @@ if __name__ == '__main__':
     word = "This is python testing on jupyter. This is Nayeon's Testing page? hoho! Haha!!!"
     char = 'anaconda is nice!!! Wow. a'
 
-    print to_words(word)
-    print to_chars(char)
+    print(to_words(word))
+    print(to_chars(char))
     print('end...')
