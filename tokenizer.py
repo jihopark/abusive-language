@@ -10,9 +10,8 @@ def to_words(inputStr, padStart=0, padEnd=0, includePunct=True):
     processedInputStr = ''
     if includePunct:
         processedInputStr = re.sub("([.,!'?()])", r' \1 ', inputStr)
-        # processedInputStr = re.sub('\s{2,}', ' ', processedInputStr)
     else:
-        processedInputStr = inputStr.translate(None, string.punctuation)
+        processedInputStr = inputStr.translate(str.maketrans('', '', string.punctuation))
 
     word_list += processedInputStr.split()
 
@@ -26,7 +25,7 @@ def to_chars(inputStr, includeSpace=False, includePunct=True):
 
     puncHandledStr = inputStr
     if not includePunct:
-        puncHandledStr = inputStr.translate(None, string.punctuation)
+        puncHandledStr = inputStr.translate(str.maketrans('', '', string.punctuation))
 
     word_tokens = puncHandledStr.split()
 
