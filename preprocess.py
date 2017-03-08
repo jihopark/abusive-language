@@ -5,9 +5,7 @@ import numpy as np
 from nltk.tokenize import TweetTokenizer
 from nltk import ngrams
 from collections import Counter
-from tokenizer import to_words, to_chars
 import itertools
-from functools import reduce
 
 
 tknzr = TweetTokenizer(reduce_len=True)
@@ -44,139 +42,84 @@ def concat_unshared_task_datasets():
     data = {}
     # waseem and hovy naacl 2016
     df = pd.read_csv('./crawled/wassem_hovy_naacl.csv',
-                        sep="\t",
-                        header=None,
-                        skiprows=[0],
-                        names=["Tweet_ID", "Previous", "User_ID", "Text", "Label"],
-                        error_bad_lines=False
+                     sep="\t",
+                     header=None,
+                     skiprows=[0],
+                     names=["Tweet_ID", "Previous", "User_ID", "Text", "Label"],
+                     error_bad_lines=False
                     )
     # wassem css 2016
     df2 = pd.read_csv('./crawled/wassem_css.csv',
-                        sep="\t",
-                        header=None,
-                        skiprows=[0],
-                        names=["Tweet_ID", "Previous",
-                        "User_ID", "Text",
-                        "Expert_Label",
-                        "Amateur_Label"],
-                    error_bad_lines=False)
+                      sep="\t",
+                      header=None,
+                      skiprows=[0],
+                      names=["Tweet_ID", "Previous",
+                             "User_ID", "Text",
+                             "Expert_Label",
+                             "Amateur_Label"],
+                      error_bad_lines=False)
     # label: sexism
     data["sexism"] = dataframe_to_list(pd.concat([df[df['Label'] == 'sexism']['Text'],
-                                          df2[df2['Expert_Label'] == 'sexism']['Text'],
-                                          df2[df2['Expert_Label'] == 'both']['Text']]))
+                                                  df2[df2['Expert_Label'] == 'sexism']['Text'],
+                                                  df2[df2['Expert_Label'] == 'both']['Text']]))
     # label: racism
     data["racism"] = dataframe_to_list(pd.concat([df[df['Label'] == 'racism']['Text'],
-                                          df2[df2['Expert_Label'] == 'racism']['Text'],
-                                          df2[df2['Expert_Label'] == 'both']['Text']]))
+                                                  df2[df2['Expert_Label'] == 'racism']['Text'],
+                                                  df2[df2['Expert_Label'] == 'both']['Text']]))
     # label: none
     data["none"] = dataframe_to_list(pd.concat([df[df['Label'] == 'none']['Text'],
-                                          df2[df2['Expert_Label'] == 'neither']['Text']]))
+                                                df2[df2['Expert_Label'] == 'neither']['Text']]))
     print("Unshared task dataset concat done.")
     print("Label Count: Sexism-%s, Racism-%s, None-%s" % (len(data["sexism"]),
-                                                           len(data["racism"]),
-                                                            len(data["none"])))
+                                                          len(data["racism"]),
+                                                          len(data["none"])))
     return data
-
-def ngram_counter(tokens, n, separator="_"):
-    grams = []
-    for i in range(1, n+1):
-        grams += list(ngrams(tokens, i))
-    grams = map(lambda x: separator.join(x), grams)
-    return Counter(grams)
 
 #TODO: create multi-class dataset split function
 
 def create_binary_dataset(x_neg, x_pos, split=[0.7, 0.15, 0.15]):
-	assert (split[0] + split[1] + split[2]) == 1
+    assert (split[0] + split[1] + split[2]) == 1
 
-	x_neg = np.array(x_neg)
-	x_pos = np.array(x_pos)
+    x_neg = np.array(x_neg)
+    x_pos = np.array(x_pos)
 
-	y_neg = np.zeros_like(x_neg)
-	y_pos = np.ones_like(x_pos)
+    y_neg = np.zeros_like(x_neg)
+    y_pos = np.ones_like(x_pos)
 
 	# create training set
-	x_neg_train, x_neg_test, y_neg_train, y_neg_test = train_test_split(x_neg, y_neg, test_size=split[1]+split[2])
-	x_pos_train, x_pos_test, y_pos_train, y_pos_test = train_test_split(x_pos, y_pos, test_size=split[1]+split[2])
+    x_neg_train, x_neg_test, y_neg_train, y_neg_test = train_test_split(x_neg, y_neg, test_size=split[1]+split[2])
+    x_pos_train, x_pos_test, y_pos_train, y_pos_test = train_test_split(x_pos, y_pos, test_size=split[1]+split[2])
 
-	x_train = np.concatenate([x_neg_train, x_pos_train])
-	y_train = np.concatenate([y_neg_train, y_pos_train])
+    x_train = np.concatenate([x_neg_train, x_pos_train])
+    y_train = np.concatenate([y_neg_train, y_pos_train])
 
-	print("Training set size:%s (neg:%s/pos:%s)\n" % (len(x_train), len(x_neg_train), len(x_pos_train)))
-	print("sample neg - " + x_train[0])
-	print("sample pos - " + x_train[-1])
+    print("Training set size:%s (neg:%s/pos:%s)\n" % (len(x_train), len(x_neg_train), len(x_pos_train)))
+    print("sample neg - " + x_train[0])
+    print("sample pos - " + x_train[-1])
 
 	# creating validation/test set
-	test_split = split[2]/(split[1]+split[2])
-	x_neg_valid, x_neg_test, y_neg_valid, y_neg_test = train_test_split(x_neg_test, y_neg_test, test_size=test_split)
-	x_pos_valid, x_pos_test, y_pos_valid, y_pos_test = train_test_split(x_pos_test, y_pos_test, test_size=test_split)
+    test_split = split[2]/(split[1]+split[2])
+    x_neg_valid, x_neg_test, y_neg_valid, y_neg_test = train_test_split(x_neg_test, y_neg_test, test_size=test_split)
+    x_pos_valid, x_pos_test, y_pos_valid, y_pos_test = train_test_split(x_pos_test, y_pos_test, test_size=test_split)
 
-	x_valid = np.concatenate([x_neg_valid, x_pos_valid])
-	y_valid = np.concatenate([y_neg_valid, y_pos_valid])
+    x_valid = np.concatenate([x_neg_valid, x_pos_valid])
+    y_valid = np.concatenate([y_neg_valid, y_pos_valid])
 
-	print("\nValidation set size:%s (neg:%s/pos:%s)\n" % (len(x_valid), len(x_neg_valid), len(x_pos_valid)))
-	print("sample neg - " + x_valid[0])
-	print("sample pos - " + x_valid[-1])
+    print("\nValidation set size:%s (neg:%s/pos:%s)\n" % (len(x_valid), len(x_neg_valid), len(x_pos_valid)))
+    print("sample neg - " + x_valid[0])
+    print("sample pos - " + x_valid[-1])
 
-	x_test = np.concatenate([x_neg_test, x_pos_test])
-	y_test = np.concatenate([y_neg_test, y_pos_test])
+    x_test = np.concatenate([x_neg_test, x_pos_test])
+    y_test = np.concatenate([y_neg_test, y_pos_test])
 
-	print("\nTest set size:%s (neg:%s/pos:%s)\n" % (len(x_test), len(x_neg_test), len(x_pos_test)))
-	print("sample neg - " + x_test[0])
-	print("sample pos - " + x_test[-1])
+    print("\nTest set size:%s (neg:%s/pos:%s)\n" % (len(x_test), len(x_neg_test), len(x_pos_test)))
+    print("sample neg - " + x_test[0])
+    print("sample pos - " + x_test[-1])
 
-	return x_train, y_train, x_valid, y_valid, x_test, y_test
-
-def get_dictionaries(data, vocabulary_size):
-    index2word = ["UNK"]
-    word2index = {"UNK": 0}
-    index2freq = [0]
-    i = 1
-    for g, count in data.most_common(vocabulary_size):
-        index2word.append(g)
-        word2index[g] = i
-        index2freq.append(count)
-        i += 1
-    return index2word, word2index, index2freq
-
-
-
-def turn_into_word_ngram_matrix(datalist, n=2, vocabulary_size=10000):
-    data = list(itertools.chain(*datalist))
-    print(data[0])
-    print(data[-1])
-
-    print("\nTokenized texts into words")
-    data = list(map(lambda x: to_words(x.lower()), data))
-    print(data[0])
-    print(data[-1])
-
-    print("\nNgram-count the tokens")
-    data = list(map(lambda x: ngram_counter(x, 2), data))
-    print(data[0])
-    print(data[-1])
-
-    print("\nCreate dictionary")
-    grams = reduce(lambda x,y: x+y, data)
-    print("total ngrams: %s" % len(grams))
-
-    if len(grams) < vocabulary_size:
-        vocabulary_size = len(grams)
-
-    print("Most common:")
-    for g, count in grams.most_common(10):
-        print("%s: %7d" % (g, count))
-
-    index2word, word2index, index2freq = get_dictionaries(grams,
-            vocabulary_size)
-
-    print("index2word: %s" % index2word[:10])
-    print("index2freq: %s" % index2freq[:10])
-    #TODO: need to index make data into indexes
+    return x_train, y_train, x_valid, y_valid, x_test, y_test
 
 if __name__ == '__main__':
     data = concat_unshared_task_datasets()
-    turn_into_word_ngram_matrix([data["racism"][:100], data["none"][:100]])
 
     #create_binary_dataset(data["none"], data["racism"])
     #create_binary_dataset(data["none"], data["sexism"],split=[0.8, 0.1, 0.1])
