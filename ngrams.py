@@ -29,7 +29,7 @@ def get_dictionaries(data, vocabulary_size):
     return index2word, word2index, index2freq
 
 def make_ngram_matrix(datalist, data_name, word_or_char="word",
-        tokenizer_options={}, n=2, vocab_size=10000):
+        tokenizer_options={}, n=2, vocab_size=100000):
     print("\n\nData Name:" + data_name)
     # check if already there
     file_path = os.path.abspath("data/ngram/%s" % data_name)
