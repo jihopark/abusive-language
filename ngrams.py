@@ -30,6 +30,13 @@ def get_dictionaries(data, vocabulary_size):
 
 def make_ngram_matrix(datalist, data_name, word_or_char="word",
         tokenizer_options={}, n=2, vocab_size=10000):
+    print("\n\nData Name:" + data_name)
+    # check if already there
+    file_path = os.path.abspath("data/ngram/%s" % data_name)
+    if os.path.exists(file_path):
+        print("data already processed")
+        return
+
     data = list(itertools.chain(*datalist))
     print(data[0])
     print(data[-1])
@@ -77,12 +84,9 @@ def make_ngram_matrix(datalist, data_name, word_or_char="word",
     print(data[-1])
     print(data.shape)
 
-    file_path = os.path.abspath("data/ngram/%s" % data_name)
     print("\nSave np array & metadata into file at %s" % file_path)
 
-
-    if not os.path.exists(file_path):
-        os.makedirs(file_path)
+    os.makedirs(file_path)
 
     np.save(file_path + "/data.npy", data)
 
@@ -96,4 +100,59 @@ def make_ngram_matrix(datalist, data_name, word_or_char="word",
 
 if __name__ == '__main__':
     data = load_data()
-    make_ngram_matrix([data["racism"], data["none"]], data_name="test")
+    # racism word ngram
+    make_ngram_matrix([data["racism"], data["none"]], n=3,
+            data_name="racism_binary_word_pad_none_3gram")
+    make_ngram_matrix([data["racism"], data["none"]], n=4,
+            data_name="racism_binary_word_pad_1_4gram")
+    make_ngram_matrix([data["racism"], data["none"]], n=3,
+            data_name="racism_binary_word_pad_none_3gram_remove_punc",
+            tokenizer_options={"includePunct":False})
+    make_ngram_matrix([data["racism"], data["none"]], n=4,
+            data_name="racism_binary_word_pad_1_4gram_remove_punc",
+            tokenizer_options={"includePunct":False})
+
+    # sexism word ngram
+    make_ngram_matrix([data["sexism"], data["none"]], n=3,
+            data_name="sexism_binary_word_pad_none_3gram")
+    make_ngram_matrix([data["sexism"], data["none"]], n=4,
+            data_name="sexism_binary_word_pad_1_4gram")
+    make_ngram_matrix([data["sexism"], data["none"]], n=3,
+            data_name="sexism_binary_word_pad_none_3gram_remove_punc",
+            tokenizer_options={"includePunct":False})
+    make_ngram_matrix([data["sexism"], data["none"]], n=4,
+            data_name="sexism_binary_word_pad_1_4gram_remove_punc",
+            tokenizer_options={"includePunct":False})
+
+    # racism char ngram
+    make_ngram_matrix([data["racism"], data["none"]], n=3,
+            word_or_char="char",
+            data_name="racism_binary_char_pad_none_3gram")
+    make_ngram_matrix([data["racism"], data["none"]], n=4,
+            word_or_char="char",
+            data_name="racism_binary_char_pad_1_4gram")
+    make_ngram_matrix([data["racism"], data["none"]], n=3,
+            word_or_char="char",
+            data_name="racism_binary_char_pad_none_3gram_remove_punc",
+            tokenizer_options={"includePunct":False})
+    make_ngram_matrix([data["racism"], data["none"]], n=4,
+            word_or_char="char",
+            data_name="racism_binary_char_pad_1_4gram_remove_punc",
+            tokenizer_options={"includePunct":False})
+
+    # sexism char ngram
+    make_ngram_matrix([data["sexism"], data["none"]], n=3,
+            word_or_char="char",
+            data_name="sexism_binary_char_pad_none_3gram")
+    make_ngram_matrix([data["sexism"], data["none"]], n=4,
+            word_or_char="char",
+            data_name="sexism_binary_char_pad_1_4gram")
+    make_ngram_matrix([data["sexism"], data["none"]], n=3,
+            word_or_char="char",
+            data_name="sexism_binary_char_pad_none_3gram_remove_punc",
+            tokenizer_options={"includePunct":False})
+    make_ngram_matrix([data["sexism"], data["none"]], n=4,
+            word_or_char="char",
+            data_name="sexism_binary_char_pad_1_4gram_remove_punc",
+            tokenizer_options={"includePunct":False})
+
