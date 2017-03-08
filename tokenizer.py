@@ -1,7 +1,14 @@
 import string
 import re
 
-def to_words(inputStr, padStart=0, padEnd=0, includePunct=True):
+
+# to_words
+# options = {"padStart": integer, "padEnd": integer, "includePunct":boolean}
+def to_words(inputStr, options={}):
+    includePunct = True if "includePunct" not in options else options["includePunct"]
+    padStart = 0 if "padStart" not in options else options["padStart"]
+    padEnd = 0 if "padEnd" not in options else options["padEnd"]
+
     word_list = [];
 
     #append <start> tokens if any
@@ -20,7 +27,12 @@ def to_words(inputStr, padStart=0, padEnd=0, includePunct=True):
 
     return word_list
 
-def to_chars(inputStr, includeSpace=False, includePunct=True):
+# to_chars
+# options = {"includeSpace": boolean, "includePunct": boolean}
+def to_chars(inputStr, options={}):
+    includePunct = True if "includePunct" not in options else options["includePunct"]
+    includeSpace = False if "includeSpace" not in options else options["includeSpace"]
+
     char_list = [];
 
     puncHandledStr = inputStr
@@ -43,5 +55,7 @@ if __name__ == '__main__':
     char = 'anaconda is nice!!! Wow. a'
 
     print(to_words(word))
+    print(to_words(word, options={"padStart": 1, "padEnd": 1}))
     print(to_chars(char))
+    print(to_chars(char, options={"includePunct": False}))
     print('end...')

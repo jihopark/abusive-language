@@ -29,16 +29,15 @@ def get_dictionaries(data, vocabulary_size):
     return index2word, word2index, index2freq
 
 def make_ngram_matrix(datalist, data_name, word_or_char="word",
-        tokenization_options=None, n=2, vocab_size=10000):
+        tokenizer_options={}, n=2, vocab_size=10000):
     data = list(itertools.chain(*datalist))
     print(data[0])
     print(data[-1])
 
     print("\nTokenize texts")
-    if word_or_char == "word":
-        data = list(map(lambda x: to_words(x.lower()), data))
-    else:
-        data = list(map(lambda x: to_chars(x.lower()), data))
+    tokenizer = to_words if word_or_char == "word" else to_chars
+    data = [tokenizer(x.lower(), tokenizer_options) for x in data]
+
     print(data[0])
     print(data[-1])
 
