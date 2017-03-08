@@ -1,6 +1,8 @@
 import itertools
 from collections import Counter
+import os
 
+import pickle
 import numpy as np
 from nltk import ngrams
 from tqdm import tqdm
@@ -26,13 +28,17 @@ def get_dictionaries(data, vocabulary_size):
         i += 1
     return index2word, word2index, index2freq
 
-def make_ngram_matrix(datalist, n=2, vocab_size=10000):
+def make_ngram_matrix(datalist, data_name, word_or_char="word",
+        tokenization_options=None, n=2, vocab_size=10000):
     data = list(itertools.chain(*datalist))
     print(data[0])
     print(data[-1])
 
-    print("\nTokenized texts into words")
-    data = list(map(lambda x: to_words(x.lower()), data))
+    print("\nTokenize texts")
+    if word_or_char == "word":
+        data = list(map(lambda x: to_words(x.lower()), data))
+    else:
+        data = list(map(lambda x: to_chars(x.lower()), data))
     print(data[0])
     print(data[-1])
 
@@ -67,10 +73,28 @@ def make_ngram_matrix(datalist, n=2, vocab_size=10000):
                 row[word2index[g]] = 1
         data[i] = row
 
+    data = np.array(data)
     print(data[0])
     print(data[-1])
+    print(data.shape)
 
+    file_path = os.path.abspath("data/ngram/%s" % data_name)
+    print("\nSave np array & metadata into file at %s" % file_path)
+
+
+    if not os.path.exists(file_path):
+        os.makedirs(file_path)
+
+    np.save(file_path + "/data.npy", data)
+
+    metadata = {
+        "index2word": index2word,
+        "index2freq": index2freq,
+        "word2index": word2index
+        }
+    with open(file_path + "/metadata.pkl", "wb") as f:
+        pickle.dump(metadata, f)
 
 if __name__ == '__main__':
     data = load_data()
-    make_ngram_matrix([data["racism"], data["none"]])
+    make_ngram_matrix([data["racism"], data["none"]], data_name="test")
