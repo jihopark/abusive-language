@@ -1,7 +1,9 @@
 import itertools
-from tqdm import tqdm
 from collections import Counter
+
+import numpy as np
 from nltk import ngrams
+from tqdm import tqdm
 from preprocess import concat_unshared_task_datasets as load_data
 from tokenizer import to_words, to_chars
 
@@ -24,10 +26,7 @@ def get_dictionaries(data, vocabulary_size):
         i += 1
     return index2word, word2index, index2freq
 
-# def to_ngrams_rows(line, word2index):
-
-
-def turn_into_word_ngram_matrix(datalist, n=2, vocabulary_size=10000):
+def make_ngram_matrix(datalist, n=2, vocab_size=10000):
     data = list(itertools.chain(*datalist))
     print(data[0])
     print(data[-1])
@@ -38,7 +37,7 @@ def turn_into_word_ngram_matrix(datalist, n=2, vocabulary_size=10000):
     print(data[-1])
 
     print("\nNgram-count the tokens")
-    data = list(map(lambda x: ngram_counter(x, 2), data))
+    data = list(map(lambda x: ngram_counter(x, n), data))
     print(data[0])
     print(data[-1])
 
@@ -48,21 +47,30 @@ def turn_into_word_ngram_matrix(datalist, n=2, vocabulary_size=10000):
         grams += data[i]
     print("total ngrams: %s" % len(grams))
 
-    if len(grams) < vocabulary_size:
-        vocabulary_size = len(grams)
+    if len(grams) < vocab_size:
+        vocab_size = len(grams)
 
     print("Most common:")
     for g, count in grams.most_common(10):
         print("%s: %7d" % (g, count))
 
-    index2word, word2index, index2freq = get_dictionaries(grams, vocabulary_size)
+    index2word, word2index, index2freq = get_dictionaries(grams, vocab_size)
 
-    print("index2word: %s" % index2word[:10])
-    print("index2freq: %s" % index2freq[:10])
+    print("index2word: %s" % index2word[:100])
+    print("index2freq: %s" % index2freq[:100])
 
+    print("\nTurn ngram-count to ngram-feature rows")
+    for i, d in enumerate(data):
+        row = np.zeros(vocab_size + 1)
+        for g in list(d.elements()):
+            if g in word2index:
+                row[word2index[g]] = 1
+        data[i] = row
 
+    print(data[0])
+    print(data[-1])
 
 
 if __name__ == '__main__':
     data = load_data()
-    turn_into_word_ngram_matrix([data["racism"], data["none"]])
+    make_ngram_matrix([data["racism"], data["none"]])
