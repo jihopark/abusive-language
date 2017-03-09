@@ -1,27 +1,22 @@
-from sklearn.model_selection import train_test_split
-import pandas as pd
 import re
 import numpy as np
-from nltk.tokenize import TweetTokenizer
-from nltk import ngrams
-from collections import Counter
-import itertools
+import pandas as pd
+from sklearn.model_selection import train_test_split
 
 
-tknzr = TweetTokenizer(reduce_len=True)
 
 # minimum word count for a tweet. tweet less than this will be removed
 MIN_WORDS = 2
 
 def is_url(s):
-    urls = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', s)
+    urls = re.findall(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', s)
     return len(urls) > 0
 
 def preprocess_tweet(tweet):
     try:
         if tweet[0:2] == "RT":
             tweet = tweet[2:]
-        tokens = tknzr.tokenize(tweet)
+        tokens = tweet.split()
         tokens = filter(lambda x: x[0] != "@" and not is_url(x), tokens) # remove mentions or urls
         tokens = map(lambda x: x[1:] if x[0] == "#" else x, tokens) # remove # from hashtags
         tokens = [w.lower() for w in tokens] # to lower case
