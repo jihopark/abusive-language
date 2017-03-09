@@ -9,9 +9,12 @@ from tqdm import tqdm
 from preprocess import concat_unshared_task_datasets as load_data
 from tokenizer import to_words, to_chars
 
-def ngram_counter(tokens, n, separator="_"):
+# tokens: array of tokens, n: maximum ngram, start_n: minimum ngram,
+# separator: char between each tokens
+# returns ngrams (start_n ~ n)
+def ngram_counter(tokens, n, start_n=1, separator="_"):
     grams = []
-    for i in range(1, n+1):
+    for i in range(start_n, n+1):
         grams += list(ngrams(tokens, i))
     grams = map(lambda x: separator.join(x), grams)
     return Counter(grams)
