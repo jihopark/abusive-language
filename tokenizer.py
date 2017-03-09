@@ -1,15 +1,15 @@
 import string
 import re
 
-#filter_non_alphanum_punc
-def filter_non_alphanum_punc(inputStr):
-    emoji_pattern = re.compile("["
-            u"\U0001F600-\U0001F64F"  # emoticons
-            u"\U0001F300-\U0001F5FF"  # symbols & pictographs
-            u"\U0001F680-\U0001F6FF"  # transport & map symbols
-            u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
-                               "]+", flags=re.UNICODE)
-    return emoji_pattern.sub(r'', inputStr)
+def word_filtering(inputStr, includePunct, includeSpace=True):
+    whitelistStr = string.ascii_letters + string.digits
+    whitelistStr = (whitelistStr + string.punctuation) if includePunct else whitelistStr
+    whitelistStr = (whitelistStr + string.whitespace) if includeSpace else whitelistStr
+
+    whitelist = set(whitelistStr)
+    processedStr = ''.join(filter(whitelist.__contains__, inputStr))
+
+    return processedStr
 
 # to_words
 # options = {"padStart": integer, "padEnd": integer, "includePunct":boolean, "filterNonAlphaNumPun":boolean}
@@ -20,23 +20,24 @@ def to_words(inputStr, options={}):
     padEnd = 0 if "padEnd" not in options else options["padEnd"]
 
     word_list = [];
-
-    #append <start> tokens if any
+    #insert <start> tokens if any
     word_list.extend(['<start>'] * padStart)
 
-    # apply additional filtering to inputStr if necessary
-    if filterNonAlphaNumPun:
-        inputStr = filter_non_alphanum_punc(inputStr)
-
     processedInputStr = ''
-    if includePunct:
-        processedInputStr = re.sub("([.,!'?()])", r' \1 ', inputStr)
+
+    # filter non-alpha-num
+    if filterNonAlphaNumPun:
+        processedInputStr = word_filtering(inputStr, includePunct)
     else:
-        processedInputStr = inputStr.translate(str.maketrans('', '', string.punctuation))
+        processedInputStr = inputStr
+
+    # space-splitting punctuation
+    if includePunct:
+        processedInputStr = re.sub("([.,!'?()])", r' \1 ', processedInputStr)
 
     word_list += processedInputStr.split()
 
-    #append <end> tokens if any
+    #insert <end> tokens if any
     word_list.extend(['<end>'] * padEnd)
 
     return word_list
@@ -50,21 +51,17 @@ def to_chars(inputStr, options={}):
 
     char_list = [];
 
+    # filter non-alpha-num & handle punc
     if filterNonAlphaNumPun:
-        inputStr = filter_non_alphanum_punc(inputStr)
+        inputStr = word_filtering(inputStr, includePunct)
+    else:
+        inputStr = inputStr if includePunct else inputStr.translate(str.maketrans('', '', string.punctuation))
 
-    puncHandledStr = inputStr
-    if not includePunct:
-        puncHandledStr = inputStr.translate(str.maketrans('', '', string.punctuation))
-
-    word_tokens = puncHandledStr.split()
-
+    word_tokens = inputStr.split()
     for word_token in word_tokens:
-            processed = " ".join(word_token)
-            char_list += processed.split()
-            char_list += " "
+        token_list = list(word_token)
+        char_list += ([" "] + token_list) if includeSpace else token_list
 
-    del char_list[-1]
     return char_list
 
 # testing
@@ -74,10 +71,19 @@ if __name__ == '__main__':
 
     print(word)
 
-    print(to_words(word))
-    print(to_words(word, options={"filterNonAlphaNumPun": False }))
-    print(to_words(word, options={"padStart": 1, "padEnd": 1}))
-    print(to_chars(char))
-    print(to_chars(char, options={"filterNonAlphaNumPun": False}))
-    print(to_chars(char, options={"includePunct": False}))
+    # print(to_words(word))
+    # print(to_words(word, options={"filterNonAlphaNumPun": False }))
+    # print(to_words(word, options={"padStart": 1, "padEnd": 1}))
+    # print(to_chars(char))
+    # print(to_chars(char, options={"filterNonAlphaNumPun": False}))
+    # print(to_chars(char, options={"includePunct": False}))
+
+    print(to_words(word, options={"includePunct":True}))
+    print(to_words(word, options={"includePunct":False}))
+    print(to_words(word, options={"includePunct":True, "filterNonAlphaNumPun": False}))
+    print(to_words(word, options={"includePunct":False, "filterNonAlphaNumPun": False}))
+    print(to_chars(char, options={"filterNonAlphaNumPun": True, "includeSpace": False, "includePunct":True}))
+    print(to_chars(char, options={"filterNonAlphaNumPun": True, "includeSpace": False, "includePunct":False}))
+    print(to_chars(char, options={"filterNonAlphaNumPun": True, "includeSpace": False, "includePunct":True}))
+    print(to_chars(char, options={"filterNonAlphaNumPun": True, "includeSpace": True, "includePunct":True}))
     print('end...')
