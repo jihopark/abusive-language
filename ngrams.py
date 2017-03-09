@@ -1,6 +1,7 @@
 import itertools
 from collections import Counter
 import os
+import argparse
 
 import pickle
 import numpy as np
@@ -8,6 +9,12 @@ from nltk import ngrams
 from tqdm import tqdm
 from preprocess import concat_unshared_task_datasets as load_data
 from tokenizer import to_words, to_chars
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--nohup', action="store_true", help='turn this option when using with nohup')
+args = vars(parser.parse_args())
+
+
 
 # tokens: array of tokens, n: maximum ngram, start_n: minimum ngram,
 # separator: char between each tokens
@@ -58,7 +65,13 @@ def make_ngram_matrix(datalist, data_name, word_or_char="word",
 
     print("\nCreate dictionary")
     grams = Counter()
-    for i in tqdm(range(len(data))):
+
+    # do not output tqdm progress if nohup
+    range_ = range(len(data))
+    if not args["nohup"]:
+        range_ = tqdm(range_)
+
+    for i in range_:
         grams += data[i]
     print("total ngrams: %s" % len(grams))
 
