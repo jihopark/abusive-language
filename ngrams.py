@@ -46,6 +46,16 @@ def make_ngram_matrix(datalist, data_name, word_or_char="word",
     if os.path.exists(file_path):
         print("data already processed")
         return
+    # create label file
+    labels = None
+    for i, d in enumerate(datalist):
+        tmp = np.zeros((len(d), 1))
+        tmp.fill(i)
+        labels = np.vstack((labels, tmp)) if labels is not None else tmp
+    print("Created labels column matrix")
+    print(labels.shape)
+    print(labels[0])
+    print(labels[-1])
 
     data = list(itertools.chain(*datalist))
     print(data[0])
@@ -98,6 +108,9 @@ def make_ngram_matrix(datalist, data_name, word_or_char="word",
     data = np.array(data)
     print(data[0])
     print(data[-1])
+
+    #include labels in the data
+    data = np.hstack((data, labels))
     print(data.shape)
 
     print("\nSave np array & metadata into file at %s" % file_path)
@@ -184,4 +197,3 @@ if __name__ == '__main__':
                       word_or_char="char",
                       data_name="sexism_binary_char_pad_1_5gram_remove_punc",
                       tokenizer_options={"includePunct":False})
-
