@@ -3,6 +3,18 @@
 
 import numpy as np
 from sklearn.model_selection import train_test_split
+from random import sample
+
+def batch_gen(x, y, batch_size):
+    while True:
+        for i in range(0, len(x), batch_size):
+            if (i+1)*batch_size < len(x):
+                yield x[i : (i+1)*batch_size].T, y[i : (i+1)*batch_size].T
+
+def rand_batch_gen(x, y, batch_size):
+    while True:
+        sample_idx = sample(list(np.arange(len(x))), batch_size)
+        yield x[sample_idx], y[sample_idx]
 
 def train_test_split_in_chunk(x, y, test_size, n=5):
     split_index = []
