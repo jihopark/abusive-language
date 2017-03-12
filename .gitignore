@@ -1,5 +1,5 @@
 .ipynb_checkpoints/
 *.pyc
 *.out
-/data/*
+/data/ngram_outputs
 *.swp
