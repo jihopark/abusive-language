@@ -42,8 +42,8 @@ def train_test_split_in_chunk(x, y, test_size, n=5):
             (str(x_train.shape), str(y_train.shape), str(x_test.shape), str(y_test.shape)))
     return x_train, x_test, y_train, y_test
 
-def split_dataset_binary(x=None, x_neg=None, x_pos=None, split=[0.85, 0.15]):
-    assert (split[0] + split[1]) == 1
+def split_dataset_binary(x=None, x_neg=None, x_pos=None, split=[0.7, 0.15, 0.15]):
+    assert (split[0] + split[1] + split[2]) == 1
     assert (x is not None or (x_neg is not None and x_pos is not None))
     if x_neg is None and x_pos is None:
         print("Need to split dataset by label")
@@ -63,16 +63,24 @@ def split_dataset_binary(x=None, x_neg=None, x_pos=None, split=[0.85, 0.15]):
 
     # create training set
     if len(x_neg) > 5000:
-        x_neg_train, x_neg_test, y_neg_train, y_neg_test = train_test_split_in_chunk(x_neg, y_neg, test_size=split[1])
+        x_neg_train, x_neg_test, y_neg_train, y_neg_test = train_test_split_in_chunk(x_neg, y_neg, test_size=split[1]+split[2])
     else:
-        x_neg_train, x_neg_test, y_neg_train, y_neg_test = train_test_split(x_neg, y_neg, test_size=split[1])
+        x_neg_train, x_neg_test, y_neg_train, y_neg_test = train_test_split(x_neg, y_neg, test_size=split[1]+split[2])
     if len(x_pos) > 5000:
-        x_pos_train, x_pos_test, y_pos_train, y_pos_test = train_test_split_in_chunk(x_pos, y_pos, test_size=split[1])
+        x_pos_train, x_pos_test, y_pos_train, y_pos_test = train_test_split_in_chunk(x_pos, y_pos, test_size=split[1]+split[2])
     else:
-        x_pos_train, x_pos_test, y_pos_train, y_pos_test = train_test_split(x_pos, y_pos, test_size=split[1])
+        x_pos_train, x_pos_test, y_pos_train, y_pos_test = train_test_split(x_pos, y_pos, test_size=split[1]+split[2])
 
     x_train = np.concatenate([x_neg_train, x_pos_train])
     y_train = np.concatenate([y_neg_train, y_pos_train])
+
+    x_pos_valid, x_pos_test, y_pos_valid, y_pos_test = train_test_split(x_pos_test, y_pos_test,
+                                                                        test_size=split[2]/(split[1]+split[2]))
+    x_neg_valid, x_neg_test, y_neg_valid, y_neg_test = train_test_split(x_neg_test, y_neg_test,
+                                                                        test_size=split[2]/(split[1]+split[2]))
+
+    x_valid = np.concatenate([x_neg_valid, x_pos_valid])
+    y_valid = np.concatenate([y_neg_valid, y_pos_valid])
 
     x_test = np.concatenate([x_neg_test, x_pos_test])
     y_test = np.concatenate([y_neg_test, y_pos_test])
@@ -81,11 +89,16 @@ def split_dataset_binary(x=None, x_neg=None, x_pos=None, split=[0.85, 0.15]):
     print("sample neg - " + x_train[0])
     print("sample pos - " + x_train[-1])
 
+    print("Valid set size:%s (neg:%s/pos:%s)\n" % (len(x_valid), len(x_neg_valid), len(x_pos_valid)))
+    print("sample neg - " + x_valid[0])
+    print("sample pos - " + x_valid[-1])
+
+
     print("Test set size:%s (neg:%s/pos:%s)\n" % (len(x_test), len(x_neg_test), len(x_pos_test)))
     print("sample neg - " + x_test[0])
     print("sample pos - " + x_test[-1])
 
 
-    return x_train, y_train, x_test, y_test
+    return x_train, y_train, x_valid, y_valid, x_test, y_test
 
 #TODO: create multi-class dataset split function
