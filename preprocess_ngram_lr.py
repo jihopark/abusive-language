@@ -2,16 +2,15 @@
 """ Preprocessing script for N-gram Linear Regression"""
 
 from data.ngrams import make_ngram_matrix
-from data.preprocess import concat_unshared_task_datasets as load_data
-from data.utils import split_dataset_binary
+from data.preprocess import load_preprocessed_data
 
-data = load_data()
-x_racism_train, y_racism_train, x_racism_valid, y_racism_valid, x_racism_test, y_racism_test = split_dataset_binary(x_neg=data["none"], x_pos=data["racism"])
+data = load_preprocessed_data("sexism_binary")
 
 # racism word ngram
-make_ngram_matrix(x_racism_train, y_racism_train,
-                  x_racism_valid, y_racism_valid,
-                  x_racism_test, y_racism_test,
+
+make_ngram_matrix(data["x_train"], data["y_train"],
+                  data["x_valid"], data["y_valid"],
+                  data["x_test"], data["y_test"],
                   n=3,
                   data_name="racism_binary_word_pad_none_3gram",
                   show_tqdm=True)

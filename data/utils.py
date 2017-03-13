@@ -70,8 +70,8 @@ def split_dataset_binary(x=None, x_neg=None, x_pos=None, split=[0.7, 0.15, 0.15]
     x_neg = np.array(x_neg)
     x_pos = np.array(x_pos)
 
-    y_neg = np.zeros((len(x_neg),1))
-    y_pos = np.ones((len(x_pos),1))
+    y_neg = np.zeros(len(x_neg))
+    y_pos = np.ones(len(x_pos))
 
     # create training set
     if len(x_neg) > 5000:

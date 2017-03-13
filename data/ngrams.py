@@ -92,12 +92,9 @@ def make_ngram_matrix(data, labels, valid_data, valid_labels, test_data, test_la
             _data[i] = row
 
         _data = np.array(_data)
-        print(_data[0])
-        print(_data[-1])
 
         #include labels in the data
-        _data = np.hstack((_data, _labels))
-        print(_data.shape)
+        _data = np.hstack((_data, _labels.reshape((len(_labels), 1))))
         return _data
 
     print("\nTurn ngram-count to ngram-feature rows")

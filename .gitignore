@@ -2,4 +2,5 @@
 *.pyc
 *.out
 /data/ngram_outputs
+/data/preprocessed
 *.swp
