@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 """ Training script for N-gram Linear Regression"""
+import warnings
 
 import tensorflow as tf
 import numpy as np
+from sklearn import metrics
 
 from data.ngrams import load_data_from_file
 from data.preprocess import concat_unshared_task_datasets as load_data
@@ -45,7 +47,23 @@ def eval(model, sess, x_eval, y_eval):
         model.labels: y_eval,
         model.X: x_eval
         }
-    return sess.run([model.cost, model.accuracy], feed_dict)
+    return sess.run([model.cost, model.accuracy, model.prediction], feed_dict)
+
+def calculate_metrics(y_true, y_pred):
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        try:
+            precision = metrics.precision_score(y_true, y_pred)
+            recall = metrics.recall_score(y_true, y_pred)
+            f1 = metrics.f1_score(y_true, y_pred)
+        except ValueError:
+            print("value error")
+            print(y_true)
+            print(y_pred)
+            precision = 0
+            recall = 0
+            f1 = 0
+    return precision, recall, f1
 
 def train(model, train_set, valid_set, sess, train_iter):
     if not sess:
@@ -57,12 +75,22 @@ def train(model, train_set, valid_set, sess, train_iter):
         try:
             feed_dict = train_batch(model, sess, train_set)
             if i % 100 == 0:
-                cost, accuracy = sess.run([model.cost, model.accuracy], feed_dict)
+                cost, accuracy, pred = sess.run([model.cost, model.accuracy, model.prediction],
+                                                feed_dict)
+                train_precision, train_recall, train_f1 = calculate_metrics(feed_dict[model.labels],
+                                                                            pred)
                 print("Iteration %s: mini-batch cost=%.4f, accuracy=%.3f" % (i, cost, accuracy))
+                print("Precision=%.4f, Recall=%.4f, F1=%.4f" % (train_precision,
+                                                                train_recall,
+                                                                train_f1))
             if i % FLAGS.evaluate_every == 0:
-                valid_cost, valid_accuracy = eval(model, sess, x_valid, y_valid)
-                print("\n**Validation set cost=%.4f, accuracy=%.3f" % (valid_cost, valid_accuracy))
-
+                cost, accuracy, pred = eval(model, sess, x_valid, y_valid)
+                valid_precision, valid_recall, valid_f1 = calculate_metrics(y_valid, pred)
+                print("\n**Validation set cost=%.4f, accuracy=%.3f" % (cost,
+                                                                       accuracy))
+                print("Precision=%.4f, Recall=%.4f, F1=%.4f\n" % (valid_precision,
+                                                                valid_recall,
+                                                                valid_f1))
         except KeyboardInterrupt:
             print('Interrupted by user at iteration{}'.format(i))
             return sess
