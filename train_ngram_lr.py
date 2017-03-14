@@ -14,13 +14,13 @@ from data.utils import split_dataset_binary, rand_batch_gen, batch_gen
 from model.lr import LinearRegression
 
 # Training parameters
-tf.flags.DEFINE_integer("batch_size", 1, "Number of batch size (default: 1)")
+tf.flags.DEFINE_integer("batch_size", 10, "Number of batch size (default: 10)")
 tf.flags.DEFINE_integer("num_steps", 100000, "Number of training steps(default: 100000)")
 tf.flags.DEFINE_integer("evaluate_every", 1000, "Evaluate model on dev set after this many epochs (default: 1000)")
 tf.flags.DEFINE_integer("checkpoint_every", 1000, "Save model after this many steps (default: 1000)")
 
 # Misc Parameters
-tf.flags.DEFINE_integer("memory_usage_percentage", 80, "Set Memory usage percentage (default:80)")
+tf.flags.DEFINE_integer("memory_usage_percentage", 90, "Set Memory usage percentage (default:90)")
 
 
 FLAGS = tf.flags.FLAGS
