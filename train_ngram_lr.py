@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """ Training script for N-gram Linear Regression"""
 import warnings
+import time
 
 import tensorflow as tf
 import numpy as np
@@ -50,39 +51,40 @@ def eval(model, sess, x_eval, y_eval):
     return sess.run([model.cost, model.accuracy, model.prediction], feed_dict)
 
 def calculate_metrics(y_true, y_pred):
+    # ignoring warning message
+    # UndefinedMetricWarning: F-score is ill-defined and being set to 0.0 due
+    # to no predicted samples.
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        try:
-            precision = metrics.precision_score(y_true, y_pred)
-            recall = metrics.recall_score(y_true, y_pred)
-            f1 = metrics.f1_score(y_true, y_pred)
-        except ValueError:
-            print("value error")
-            print(y_true)
-            print(y_pred)
-            precision = 0
-            recall = 0
-            f1 = 0
+
+        precision = metrics.precision_score(y_true, y_pred)
+        recall = metrics.recall_score(y_true, y_pred)
+        f1 = metrics.f1_score(y_true, y_pred)
     return precision, recall, f1
 
 def train(model, train_set, valid_set, sess, train_iter):
     if not sess:
         return None
     sess.run(tf.global_variables_initializer())
+    # create a summary writter for tensorboard visualization
+    log_path = "/logs/" + str(int(time.time()))
 
-    print("Training Started on " + model.name)
+    #writer = tf.train.SummaryWriter(log_path, graph=tf.get_default_graph())
+    print("Training Started with model: %s, log_path=%s" % (model.name,
+                                                            log_path))
     for i in range(train_iter):
         try:
             feed_dict = train_batch(model, sess, train_set)
             if i % 100 == 0:
-                cost, accuracy, pred = sess.run([model.cost, model.accuracy, model.prediction],
-                                                feed_dict)
-                train_precision, train_recall, train_f1 = calculate_metrics(feed_dict[model.labels],
-                                                                            pred)
+                cost, accuracy, pred = sess.run([model.cost,
+                                           model.accuracy,
+                                           model.prediction], feed_dict)
+                train_precision, train_recall, train_f1 =calculate_metrics(feed_dict[model.labels], pred)
                 print("Iteration %s: mini-batch cost=%.4f, accuracy=%.3f" % (i, cost, accuracy))
                 print("Precision=%.4f, Recall=%.4f, F1=%.4f" % (train_precision,
                                                                 train_recall,
-                                                                train_f1))
+                                                                train_f1
+                                                                ))
             if i % FLAGS.evaluate_every == 0:
                 cost, accuracy, pred = eval(model, sess, x_valid, y_valid)
                 valid_precision, valid_recall, valid_f1 = calculate_metrics(y_valid, pred)
