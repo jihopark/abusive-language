@@ -3,6 +3,7 @@
 ## Requirements
 - python 3.4
 - tensorflow 1.0
+- keras 2.0 (for tf model layer construction)
 - numpy
 - sklearn (for splitting dataset)
 - nltk (for ngram)
@@ -32,6 +33,7 @@
 
 ### model
 - `lr.py`: linear regression model
+- `char_cnn.py`: character-level convolutional neural network
 
 ## See run results from Tensorboard
 - after each run, the logs will be saved at `/logs/`. check command line log for the exact directory
