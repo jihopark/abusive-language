@@ -2,6 +2,7 @@
 *.pyc
 *.out
 /data/ngram_outputs
+/data/char_outputs
 /data/preprocessed
 *.swp
 /logs/*
