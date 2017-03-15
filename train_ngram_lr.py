@@ -2,6 +2,7 @@
 """ Training script for N-gram Linear Regression"""
 import warnings
 import time
+import os
 
 import tensorflow as tf
 import numpy as np
@@ -48,9 +49,9 @@ def eval(model, sess, x_eval, y_eval):
         model.labels: y_eval,
         model.X: x_eval
         }
-    return sess.run([model.cost, model.accuracy, model.prediction], feed_dict)
+    return sess.run([model.merge_summary, model.cost, model.accuracy, model.prediction], feed_dict)
 
-def calculate_metrics(y_true, y_pred):
+def calculate_metrics(y_true, y_pred, summary_writer, step):
     # ignoring warning message
     # UndefinedMetricWarning: F-score is ill-defined and being set to 0.0 due
     # to no predicted samples.
@@ -60,42 +61,60 @@ def calculate_metrics(y_true, y_pred):
         precision = metrics.precision_score(y_true, y_pred)
         recall = metrics.recall_score(y_true, y_pred)
         f1 = metrics.f1_score(y_true, y_pred)
+
+    summary_writer.add_summary(tf.Summary(value=[tf.Summary.Value(tag="precision",
+                                                                  simple_value=precision)]), global_step=step)
+    summary_writer.add_summary(tf.Summary(value=[tf.Summary.Value(tag="recall",
+                                                                  simple_value=recall)]), global_step=step)
+    summary_writer.add_summary(tf.Summary(value=[tf.Summary.Value(tag="f1",
+                                                                  simple_value=f1)]), global_step=step)
     return precision, recall, f1
 
 def train(model, train_set, valid_set, sess, train_iter):
     if not sess:
         return None
     sess.run(tf.global_variables_initializer())
-    # create a summary writter for tensorboard visualization
-    log_path = "/logs/" + str(int(time.time()))
 
-    #writer = tf.train.SummaryWriter(log_path, graph=tf.get_default_graph())
+    # create a summary writter for tensorboard visualization
+    log_path = os.path.dirname(os.path.abspath(__file__)) +  "/logs/" + str(int(time.time()))
+
+    train_writer = tf.summary.FileWriter(log_path + '/train', sess.graph)
+    valid_writer = tf.summary.FileWriter(log_path + '/valid')
+
     print("Training Started with model: %s, log_path=%s" % (model.name,
                                                             log_path))
     for i in range(train_iter):
         try:
             feed_dict = train_batch(model, sess, train_set)
             if i % 100 == 0:
-                cost, accuracy, pred = sess.run([model.cost,
+                #TODO: make training accuracy calculation for all 100 steps
+                summary, cost, accuracy, pred = sess.run([model.merge_summary,
+                                           model.cost,
                                            model.accuracy,
                                            model.prediction], feed_dict)
-                train_precision, train_recall, train_f1 =calculate_metrics(feed_dict[model.labels], pred)
+                train_precision, train_recall, train_f1 = calculate_metrics(feed_dict[model.labels], pred, train_writer,
+                                 i)
                 print("Iteration %s: mini-batch cost=%.4f, accuracy=%.3f" % (i, cost, accuracy))
                 print("Precision=%.4f, Recall=%.4f, F1=%.4f" % (train_precision,
                                                                 train_recall,
                                                                 train_f1
                                                                 ))
+                train_writer.add_summary(summary, i)
             if i % FLAGS.evaluate_every == 0:
-                cost, accuracy, pred = eval(model, sess, x_valid, y_valid)
-                valid_precision, valid_recall, valid_f1 = calculate_metrics(y_valid, pred)
+                summary, cost, accuracy, pred = eval(model, sess, x_valid, y_valid)
+                valid_precision, valid_recall, valid_f1 = calculate_metrics(y_valid, pred, valid_writer, i)
                 print("\n**Validation set cost=%.4f, accuracy=%.3f" % (cost,
                                                                        accuracy))
                 print("Precision=%.4f, Recall=%.4f, F1=%.4f\n" % (valid_precision,
                                                                 valid_recall,
                                                                 valid_f1))
+                valid_writer.add_summary(summary, i)
         except KeyboardInterrupt:
             print('Interrupted by user at iteration{}'.format(i))
-            return sess
+            break
+    train_writer.close()
+    valid_writer.close()
+    return sess
     #TODO: evaluate test set
 
 if __name__ == '__main__':
@@ -123,3 +142,4 @@ if __name__ == '__main__':
     train_batch_generator = rand_batch_gen(x_train, y_train, FLAGS.batch_size)
     with tf.Session(config=session_conf) as sess:
         train(model, train_batch_generator, None, sess, FLAGS.num_steps)
+        #TODO: session close and save

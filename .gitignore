@@ -4,3 +4,4 @@
 /data/ngram_outputs
 /data/preprocessed
 *.swp
+/logs/*
