@@ -36,7 +36,8 @@ def make_char_1hot_matrix(data, labels, split_name, file_path):
     # save into file
     np.save(file_path + "/%s_data.npy" % split_name, data)
     print("saved to " + file_path + ("/%s_data.npy" % split_name))
-    np.save(file_path + "/%s_labels.npy" % split_name, labels)
+    np.save(file_path + "/%s_labels.npy" % split_name,
+            labels.reshape(len(labels), 1))
     print("saved to " + file_path + ("/%s_labels.npy" % split_name))
 
 
@@ -82,4 +83,4 @@ def load_data_from_file(name):
     y_valid = np.load(path + "/valid_labels.npy")
     y_test = np.load(path + "/test_labels.npy")
 
-   return x_train, y_train, x_valid, y_valid, x_test, y_test
+    return x_train, y_train, x_valid, y_valid, x_test, y_test

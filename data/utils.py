@@ -16,6 +16,17 @@ def rand_batch_gen(x, y, batch_size):
         sample_idx = sample(list(np.arange(len(x))), batch_size)
         yield x[sample_idx], y[sample_idx]
 
+# a batch generator that only gives out a batch with positive samples over
+# reject_rate. ex. if reject_rate = 0.2 and batch_size = 100, batch will
+# contain at least 20 positive examples
+# TODO: find a more efficient way to do this
+def non_uniform_batch_gen(x, y, batch_size, reject_rate=0.2):
+    while True:
+        sample_idx = sample(list(np.arange(len(x))), batch_size)
+        if len(list(filter(lambda _y: _y==1, y[sample_idx]))) >= batch_size*reject_rate:
+            yield x[sample_idx], y[sample_idx]
+
+
 def train_test_split_in_chunk(x, y, test_size, n=5):
     split_index = []
     split_size = int(len(x)/n)
