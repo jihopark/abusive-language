@@ -83,4 +83,17 @@ def load_data_from_file(name):
     y_valid = np.load(path + "/valid_labels.npy")
     y_test = np.load(path + "/test_labels.npy")
 
+    print("\nData Summary:")
+    def count_positive(y_data):
+        count = 0
+        for y in y_data:
+            if y == 1:
+                count +=1
+        return count, count / len(y_data)
+
+    print("Train: Total Positive Labels=%s (%.4f)" % count_positive(y_train))
+    print("Valid: Total Positive Labels=%s (%.4f)" % count_positive(y_valid))
+    print("Test: Total Positive Labels=%s (%.4f)" % count_positive(y_test))
+
+
     return x_train, y_train, x_valid, y_valid, x_test, y_test
