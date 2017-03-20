@@ -11,7 +11,7 @@ from sklearn import metrics
 
 from data.ngrams import load_data_from_file as load_data_ngram
 from data.char import load_data_from_file as load_data_char
-from data.utils import non_uniform_batch_gen, rand_batch_gen, batch_gen
+from data.utils import balanced_batch_gen, rand_batch_gen
 
 from model.lr import LinearRegression
 from model.char_cnn import CharCNN
@@ -19,17 +19,15 @@ from model.char_cnn import CharCNN
 # Training parameters
 tf.flags.DEFINE_string("model_name", "char_cnn",
                        "Which model to train - char_cnn/ngram_lr (default=char_cnn")
-tf.flags.DEFINE_integer("batch_size", 100, "Number of batch size (default: 100)")
+tf.flags.DEFINE_integer("batch_size", 32, "Number of batch size (default: 32)")
 tf.flags.DEFINE_integer("num_steps", 100000,
                         "Number of training steps(default: 100000)")
 tf.flags.DEFINE_integer("evaluate_every", 1000,
                         "Evaluate model on dev set after this many epochs (default: 1000)")
 tf.flags.DEFINE_integer("checkpoint_every", 1000,
                         "Save model after this many steps (default: 1000)")
-tf.flags.DEFINE_float("learning_rate", 0.00001,
-                      "Learning Rate of the model(default:0.00001)")
-tf.flags.DEFINE_float("batch_pos_sample", 0.2,
-                      "Percentage of positive samples in a batch (default:0.2)")
+tf.flags.DEFINE_float("learning_rate", 0.000001,
+                      "Learning Rate of the model(default:0.000001)")
 
 
 # CharCNN parameters
@@ -187,10 +185,9 @@ if __name__ == '__main__':
     gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=FLAGS.memory_usage_percentage/100)
     session_conf = tf.ConfigProto(allow_soft_placement=True, gpu_options=gpu_options)
 
-    train_batch_generator = non_uniform_batch_gen(x_train,
-                                                  y_train,
-                                                  FLAGS.batch_size,
-                                                  FLAGS.batch_pos_sample)
+    train_batch_generator = balanced_batch_gen(x_train,
+                                               y_train,
+                                               FLAGS.batch_size)
     with tf.Session(config=session_conf) as sess:
         K.set_session(sess)
         train(model, train_batch_generator, None, sess, FLAGS.num_steps)

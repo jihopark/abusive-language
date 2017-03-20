@@ -16,15 +16,30 @@ def rand_batch_gen(x, y, batch_size):
         sample_idx = sample(list(np.arange(len(x))), batch_size)
         yield x[sample_idx], y[sample_idx]
 
-# a batch generator that only gives out a batch with positive samples over
-# reject_rate. ex. if reject_rate = 0.2 and batch_size = 100, batch will
-# contain at least 20 positive examples
-# TODO: find a more efficient way to do this
-def non_uniform_batch_gen(x, y, batch_size, reject_rate=0.2):
+# batch generator that gives out balanced batch for each class
+def balanced_batch_gen(x, y, batch_size, balance=[0.5, 0.5]):
+    classes = np.unique(y)
+
+    # for now only works for binary classes with even number of batch_size
+    assert len(classes) == 2 and batch_size % 2 == 0
+
+    idx_1 = np.where( y == classes[0])[0]
+    idx_2 = np.where( y == classes[1])[0]
+    x_1 = x[idx_1]
+    x_2 = x[idx_2]
+    y_1 = y[idx_1]
+    y_2 = y[idx_2]
+
+    print("Generating batch of %s with distribution of %.2f %.2f" %
+            (batch_size, balance[0], balance[1]))
+
     while True:
-        sample_idx = sample(list(np.arange(len(x))), batch_size)
-        if len(list(filter(lambda _y: _y==1, y[sample_idx]))) >= batch_size*reject_rate:
-            yield x[sample_idx], y[sample_idx]
+        sample_idx_1 = sample(list(np.arange(len(x_1))),
+                int(batch_size*balance[0]))
+        sample_idx_2 = sample(list(np.arange(len(x_2))),
+                int(batch_size*balance[1]))
+        yield (np.concatenate((x_1[sample_idx_1], x_2[sample_idx_2])),
+               np.concatenate((y_1[sample_idx_1], y_2[sample_idx_2])))
 
 
 def train_test_split_in_chunk(x, y, test_size, n=5):
