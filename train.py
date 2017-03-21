@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-""" Training script for N-gram Linear Regression"""
+""" Training script for all the models"""
 import warnings
 import time
 import os
@@ -43,6 +43,8 @@ tf.flags.DEFINE_integer("positive_weight", 5,
 
 # Misc Parameters
 tf.flags.DEFINE_integer("memory_usage_percentage", 90, "Set Memory usage percentage (default:90)")
+tf.flags.DEFINE_string("log_dir", "",
+                       "Where to save the log files (default: timestamp)")
 
 
 FLAGS = tf.flags.FLAGS
@@ -89,16 +91,26 @@ def calculate_metrics(y_true, y_pred, summary_writer, step):
                                                                   simple_value=f1)]), global_step=step)
     return precision, recall, f1
 
+def save_ckpt(sess, saver, path):
+    save_path = saver.save(sess, path)
+    print("Model saved in file: %s" % save_path)
+
 def train(model, train_set, valid_set, sess, train_iter):
     if not sess:
         return None
     sess.run(tf.global_variables_initializer())
 
     # create a summary writter for tensorboard visualization
-    log_path = os.path.dirname(os.path.abspath(__file__)) +  "/logs/" + str(int(time.time()))
-
+    log_folder = FLAGS.log_dir if FLAGS.log_dir else str(int(time.time()))
+    log_path = os.path.dirname(os.path.abspath(__file__)) +  "/logs/" + log_folder
     train_writer = tf.summary.FileWriter(log_path + '/train', sess.graph)
     valid_writer = tf.summary.FileWriter(log_path + '/valid')
+
+    # create a saver object to save and restore variables
+    # https://www.tensorflow.org/programmers_guide/variables#checkpoint_files
+    saver = tf.train.Saver()
+    os.makedirs(log_path + "/ckpt")
+    ckpt_path =  log_path + "/ckpt"
 
     print("Training Started with model: %s, log_path=%s" % (model.name,
                                                             log_path))
@@ -106,7 +118,6 @@ def train(model, train_set, valid_set, sess, train_iter):
         try:
             feed_dict = train_batch(model, sess, train_set)
             if i % 100 == 0:
-                #TODO: make training accuracy calculation for all 100 steps
                 summary, cost, accuracy, pred = sess.run([model.merge_summary,
                                            model.cost,
                                            model.accuracy,
@@ -130,12 +141,16 @@ def train(model, train_set, valid_set, sess, train_iter):
                                                                 valid_recall,
                                                                 valid_f1))
                 valid_writer.add_summary(summary, i)
+            if i % FLAGS.checkpoint_every == 0:
+                save_ckpt(sess, saver, ckpt_path + ("/model-%s.ckpt" % i))
         except KeyboardInterrupt:
             print('Interrupted by user at iteration{}'.format(i))
             break
+
+    save_ckpt(sess, saver, ckpt_path + "/model-final.ckpt")
     train_writer.close()
     valid_writer.close()
-    return sess
+    sess.close()
 
 if __name__ == '__main__':
     if FLAGS.model_name == "ngram_lr":
@@ -191,4 +206,3 @@ if __name__ == '__main__':
     with tf.Session(config=session_conf) as sess:
         K.set_session(sess)
         train(model, train_batch_generator, None, sess, FLAGS.num_steps)
-        #TODO: session close and save
