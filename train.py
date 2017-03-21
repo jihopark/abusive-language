@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 """ Training script for all the models"""
-import warnings
 import time
 import os
 
 import tensorflow as tf
 from keras import backend as K
 import numpy as np
-from sklearn import metrics
 
 from data.ngrams import load_data_from_file as load_data_ngram
 from data.char import load_data_from_file as load_data_char
@@ -15,30 +13,31 @@ from data.utils import balanced_batch_gen, rand_batch_gen
 
 from model.lr import LinearRegression
 from model.char_cnn import CharCNN
+from model.helper import calculate_metrics
 
 # Training parameters
 tf.flags.DEFINE_string("model_name", "char_cnn",
                        "Which model to train - char_cnn/ngram_lr (default=char_cnn")
 tf.flags.DEFINE_integer("batch_size", 32, "Number of batch size (default: 32)")
-tf.flags.DEFINE_integer("num_steps", 100000,
-                        "Number of training steps(default: 100000)")
+tf.flags.DEFINE_integer("num_steps", 500000,
+                        "Number of training steps(default: 500000)")
 tf.flags.DEFINE_integer("evaluate_every", 1000,
                         "Evaluate model on dev set after this many epochs (default: 1000)")
-tf.flags.DEFINE_integer("checkpoint_every", 1000,
-                        "Save model after this many steps (default: 1000)")
-tf.flags.DEFINE_float("learning_rate", 0.000001,
-                      "Learning Rate of the model(default:0.000001)")
+tf.flags.DEFINE_integer("checkpoint_every", 10000,
+                        "Save model after this many steps (default: 10000)")
+tf.flags.DEFINE_float("learning_rate", 0.001,
+                      "Learning Rate of the model(default:0.001)")
 
 
 # CharCNN parameters
 tf.flags.DEFINE_string("model_depth", "shallow",
                        "Depth of neural network model - choose shallow or deep (default:shallow)")
-tf.flags.DEFINE_string("model_size", "small",
+tf.flags.DEFINE_string("model_size", "large",
                        "Size of dimension of neural network model - choose \
-                       small or large (default:small)")
-tf.flags.DEFINE_integer("positive_weight", 5,
+                       small or large (default:large)")
+tf.flags.DEFINE_integer("positive_weight", 1,
                         "Weight on the positive samples for calculating loss \
-                        (default: 5)")
+                        (default: 1)")
 
 
 # Misc Parameters
@@ -71,25 +70,6 @@ def eval(model, sess, x_eval, y_eval):
         K.learning_phase(): 0 # whether to use dropout or not
         }
     return sess.run([model.merge_summary, model.cost, model.accuracy, model.prediction], feed_dict)
-
-def calculate_metrics(y_true, y_pred, summary_writer, step):
-    # ignoring warning message
-    # UndefinedMetricWarning: F-score is ill-defined and being set to 0.0 due
-    # to no predicted samples.
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-
-        precision = metrics.precision_score(y_true, y_pred)
-        recall = metrics.recall_score(y_true, y_pred)
-        f1 = metrics.f1_score(y_true, y_pred)
-
-    summary_writer.add_summary(tf.Summary(value=[tf.Summary.Value(tag="precision",
-                                                                  simple_value=precision)]), global_step=step)
-    summary_writer.add_summary(tf.Summary(value=[tf.Summary.Value(tag="recall",
-                                                                  simple_value=recall)]), global_step=step)
-    summary_writer.add_summary(tf.Summary(value=[tf.Summary.Value(tag="f1",
-                                                                  simple_value=f1)]), global_step=step)
-    return precision, recall, f1
 
 def save_ckpt(sess, saver, path):
     save_path = saver.save(sess, path)
@@ -146,7 +126,7 @@ def train(model, train_set, valid_set, sess, train_iter):
         except KeyboardInterrupt:
             print('Interrupted by user at iteration{}'.format(i))
             break
-
+    K.set_learning_phase(0)
     save_ckpt(sess, saver, ckpt_path + "/model-final.ckpt")
     train_writer.close()
     valid_writer.close()
