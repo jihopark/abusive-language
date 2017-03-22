@@ -27,6 +27,8 @@ tf.flags.DEFINE_integer("checkpoint_every", 10000,
                         "Save model after this many steps (default: 10000)")
 tf.flags.DEFINE_float("learning_rate", 0.001,
                       "Learning Rate of the model(default:0.001)")
+tf.flags.DEFINE_string("dataset_name", "sexism_binary",
+                       "Which dataset to train (default=sexism_binary")
 
 
 # CharCNN parameters
@@ -151,8 +153,7 @@ if __name__ == '__main__':
         print("\nInitializing the Logistic Regression Model with n_features=%s" % n_dim)
         model = LinearRegression(n_dim, name=name)
     elif FLAGS.model_name == "char_cnn":
-        # sexism binary
-        name = "sexism_binary"
+        name = FLAGS.dataset_name
 
         x_train, y_train, x_valid, y_valid, x_test, y_test = load_data_char(name)
         text_len = x_train.shape[1]

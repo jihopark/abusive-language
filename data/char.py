@@ -72,8 +72,7 @@ def load_data_from_file(name):
     path = os.path.dirname(os.path.abspath(__file__)) + "/char_outputs/" + name
     # check if folder exists
     if not os.path.exists(path):
-        print("no dataset exists with the name %s at path %s" % (name, path))
-        return None, None
+        raise ValueError("no dataset exists with the name %s at path %s" % (name, path))
 
     x_train = np.load(path + "/train_data.npy")
     x_valid = np.load(path + "/valid_data.npy")
