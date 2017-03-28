@@ -9,6 +9,7 @@ import numpy as np
 
 from data.ngrams import load_data_from_file as load_data_ngram
 from data.char import load_data_from_file as load_data_char
+from data.char import print_errors as print_errors_char
 from data.utils import balanced_batch_gen, rand_batch_gen
 
 from model.lr import LinearRegression
@@ -86,6 +87,10 @@ def save_ckpt(sess, saver, path):
     save_path = saver.save(sess, path)
     print("Model saved in file: %s" % save_path)
 
+def print_errors(x, true, pred):
+    if FLAGS.model_name == "char_cnn":
+        print_errors_char(x, true, pred)
+
 def train(model, train_set, valid_set, sess, train_iter):
     if not sess:
         return None
@@ -125,6 +130,7 @@ def train(model, train_set, valid_set, sess, train_iter):
             if i % FLAGS.evaluate_every == 0:
                 summary, cost, pred = eval(model, sess, x_valid, y_valid)
                 valid_precision, valid_recall, valid_f1 = calculate_metrics(y_valid, pred, valid_writer, i)
+                print_errors(x_valid, y_valid, pred)
                 print("\n**Validation set cost=%.4f" % cost)
                 print("Precision=%.4f, Recall=%.4f, F1=%.4f\n" % (valid_precision,
                                                                 valid_recall,

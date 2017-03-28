@@ -10,6 +10,40 @@ TWEET_MAX_LEN = 140
 FEATURES = list("abcdefghijklmnopqrstuvwxyz0123456789-,;.!?:’’’/\|_@#$%ˆ&*~‘+-=<>()[]{}")
 N_DIM = len(FEATURES)
 
+# turns 1hot row into char
+def one_hot_to_char(row):
+    for i, c in enumerate(row):
+        if c == 1:
+            return FEATURES[i]
+    return ''
+
+# turns 1hot 2d matrix into chars
+def one_hot_to_chars(mat):
+    return [one_hot_to_char(_row) for _row in mat]
+
+def print_errors(x, true, pred):
+    print("\nError Analysis")
+    errors = np.hstack((true, np.array(pred).reshape((len(pred), 1))))
+
+    # leave only the wrong predictions
+    error_idx = errors[:, 0] != errors[:, 1]
+    errors = errors[error_idx]
+    _x = x[error_idx]
+
+    print("\nFalse Positives")
+    fp = _x[errors[:, 1] == 1]
+    n_sample = len(fp) if len(fp) < 5 else 5
+    fp = fp[np.random.choice(len(fp), n_sample)]
+    for row in fp:
+        print(''.join(one_hot_to_chars(row)) + "\n")
+
+    print("\nFalse Negatives")
+    fn = _x[errors[:, 1] == 0]
+    n_sample = len(fn) if len(fn) < 5 else 5
+    fn = fn[np.random.choice(len(fn), n_sample)]
+    for row in fn:
+        print(''.join(one_hot_to_chars(row)) + "\n")
+
 def text_to_1hot_matrix(text, max_len):
     tokens = tokenizer.to_chars(text)
     matrix = np.zeros((max_len, N_DIM))
