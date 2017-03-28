@@ -71,7 +71,7 @@ def eval(model, sess, x_eval, y_eval):
         model.X: x_eval,
         K.learning_phase(): 0 # whether to use dropout or not
         }
-    return sess.run([model.merge_summary, model.cost, model.accuracy, model.prediction], feed_dict)
+    return sess.run([model.merge_summary, model.cost, model.prediction], feed_dict)
 
 def save_ckpt(sess, saver, path):
     save_path = saver.save(sess, path)
@@ -100,12 +100,11 @@ def train(model, train_set, valid_set, sess, train_iter):
         try:
             feed_dict = train_batch(model, sess, train_set)
             if i % 100 == 0:
-                summary, cost, accuracy, pred = sess.run([model.merge_summary,
+                summary, cost, pred = sess.run([model.merge_summary,
                                            model.cost,
-                                           model.accuracy,
                                            model.prediction], feed_dict)
                 train_precision, train_recall, train_f1 = calculate_metrics(feed_dict[model.labels], pred, train_writer, i)
-                print("Iteration %s: mini-batch cost=%.4f, accuracy=%.3f" % (i, cost, accuracy))
+                print("Iteration %s: mini-batch cost=%.4f" % (i, cost))
                 print("Precision=%.4f, Recall=%.4f, F1=%.4f" % (train_precision,
                                                                 train_recall,
                                                                 train_f1
@@ -115,10 +114,9 @@ def train(model, train_set, valid_set, sess, train_iter):
                 logits = sess.run(model.logits, feed_dict)
                 print(logits[0:20])
             if i % FLAGS.evaluate_every == 0:
-                summary, cost, accuracy, pred = eval(model, sess, x_valid, y_valid)
+                summary, cost, pred = eval(model, sess, x_valid, y_valid)
                 valid_precision, valid_recall, valid_f1 = calculate_metrics(y_valid, pred, valid_writer, i)
-                print("\n**Validation set cost=%.4f, accuracy=%.3f" % (cost,
-                                                                       accuracy))
+                print("\n**Validation set cost=%.4f" % cost)
                 print("Precision=%.4f, Recall=%.4f, F1=%.4f\n" % (valid_precision,
                                                                 valid_recall,
                                                                 valid_f1))

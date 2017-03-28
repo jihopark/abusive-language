@@ -160,8 +160,5 @@ class CharCNN(object):
 
         with tf.name_scope("prediction"):
             self.prediction = tf.argmax(self.logits, 1, name="prediction")
-            self.accuracy = tf.reduce_mean(
-                tf.cast(tf.equal(self.prediction, self.labels), tf.float32), name="accuracy")
-            tf.summary.scalar("accuracy", self.accuracy)
 
         self.merge_summary = tf.summary.merge_all()
