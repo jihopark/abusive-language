@@ -21,12 +21,13 @@ tf.flags.DEFINE_string("model_name", "char_cnn",
 tf.flags.DEFINE_integer("batch_size", 32, "Number of batch size (default: 32)")
 tf.flags.DEFINE_integer("num_steps", 500000,
                         "Number of training steps(default: 500000)")
-tf.flags.DEFINE_integer("evaluate_every", 1000,
-                        "Evaluate model on dev set after this many epochs (default: 1000)")
-tf.flags.DEFINE_integer("checkpoint_every", 10000,
-                        "Save model after this many steps (default: 10000)")
-tf.flags.DEFINE_float("learning_rate", 0.001,
-                      "Learning Rate of the model(default:0.001)")
+tf.flags.DEFINE_integer("evaluate_every", 5000,
+                        "Evaluate model on dev set after this many epochs \
+                        (default: 5000)")
+tf.flags.DEFINE_integer("checkpoint_every", 50000,
+                        "Save model after this many steps (default: 50000)")
+tf.flags.DEFINE_float("learning_rate", 0.0005,
+                      "Learning Rate of the model(default:0.0005")
 tf.flags.DEFINE_string("dataset_name", "sexism_binary",
                        "Which dataset to train (default=sexism_binary")
 
@@ -40,6 +41,14 @@ tf.flags.DEFINE_string("model_size", "large",
 tf.flags.DEFINE_integer("positive_weight", 1,
                         "Weight on the positive samples for calculating loss \
                         (default: 1)")
+tf.flags.DEFINE_float("cnn_l2", 0,
+                        "L2 regularizer weight on CNN layers \
+                        (default: 0)")
+tf.flags.DEFINE_float("fully_connected_l2", 0,
+                        "L2 regularizer weight on fully connected layers \
+                        (default: 0)")
+
+
 
 
 # Misc Parameters
@@ -50,7 +59,7 @@ tf.flags.DEFINE_string("log_dir", "",
 
 FLAGS = tf.flags.FLAGS
 FLAGS._parse_flags()
-tf.logging.set_verbosity(tf.logging.INFO)
+tf.logging.set_verbosity(tf.logging.ERROR)
 
 
 def train_batch(model, sess, train_batch_gen):
@@ -167,7 +176,9 @@ if __name__ == '__main__':
                         model_size=FLAGS.model_size,
                         model_depth=FLAGS.model_depth,
                         learning_rate=FLAGS.learning_rate,
-                        positive_weight=FLAGS.positive_weight)
+                        positive_weight=FLAGS.positive_weight,
+                        cnn_l2=FLAGS.cnn_l2,
+                        fully_connected_l2=FLAGS.fully_connected_l2)
     else:
         raise ValueError("Wrong model name. Please input from ngram_lr/char_cnn")
 

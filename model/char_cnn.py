@@ -13,6 +13,7 @@ from keras.layers import Dense, Dropout, Flatten
 from keras.models import Sequential
 from keras.objectives import categorical_crossentropy
 from keras import initializers
+from keras.regularizers import l2
 
 class CharCNN(object):
     N_FILTERS = {"small": 256, "large": 1024}
@@ -23,7 +24,7 @@ class CharCNN(object):
 
     def __init__(self, name, vocab_size, text_len, n_classes,
             learning_rate=0.01, model_size="small", model_depth="shallow",
-            positive_weight=1):
+            positive_weight=1, fully_connected_l2=0, cnn_l2=0):
         print("Building Character CNN graph of name " + name)
         self.name = name
         self.vocab_size = vocab_size
@@ -49,6 +50,7 @@ class CharCNN(object):
                                                   initializers.random_normal(
                                                       stddev=self.INIT_VAR[model_size]),
                                               activation='relu',
+                                              kernel_regularizer=l2(cnn_l2),
                                               input_shape=(text_len, vocab_size)))
                 self.layers.add(MaxPooling1D(pool_size=self.POOL_SIZE))
 
@@ -59,6 +61,7 @@ class CharCNN(object):
                                               kernel_initializer=
                                                 initializers.random_normal(
                                                     stddev=self.INIT_VAR[model_size]),
+                                              kernel_regularizer=l2(cnn_l2),
                                               activation='relu'))
                 self.layers.add(MaxPooling1D(pool_size=self.POOL_SIZE))
 
@@ -70,6 +73,7 @@ class CharCNN(object):
                                                   kernel_initializer=
                                                     initializers.random_normal(
                                                         stddev=self.INIT_VAR[model_size]),
+                                                  kernel_regularizer=l2(cnn_l2),
                                                   activation='relu'))
 
                 with tf.name_scope("cnn-layer-3"):
@@ -79,6 +83,7 @@ class CharCNN(object):
                                                   kernel_initializer=
                                                     initializers.random_normal(
                                                         stddev=self.INIT_VAR[model_size]),
+                                                  kernel_regularizer=l2(cnn_l2),
                                                   activation='relu'))
 
                 with tf.name_scope("cnn-layer-4"):
@@ -88,6 +93,7 @@ class CharCNN(object):
                                                   kernel_initializer=
                                                     initializers.random_normal(
                                                         stddev=self.INIT_VAR[model_size]),
+                                                  kernel_regularizer=l2(cnn_l2),
                                                   activation='relu'))
 
                 with tf.name_scope("cnn-layer-5"):
@@ -97,6 +103,7 @@ class CharCNN(object):
                                                   kernel_initializer=
                                                     initializers.random_normal(
                                                         stddev=self.INIT_VAR[model_size]),
+                                                  kernel_regularizer=l2(cnn_l2),
                                                   activation='relu'))
                     self.layers.add(MaxPooling1D(pool_size=self.POOL_SIZE))
 
@@ -108,6 +115,7 @@ class CharCNN(object):
                                       kernel_initializer=
                                         initializers.random_normal(
                                             stddev=self.INIT_VAR[model_size]),
+                                      kernel_regularizer=l2(fully_connected_l2),
                                       activation='relu'))
                 self.layers.add(Dropout(0.5))
 
@@ -117,6 +125,7 @@ class CharCNN(object):
                                           kernel_initializer=
                                             initializers.random_normal(
                                                 stddev=self.INIT_VAR[model_size]),
+                                          kernel_regularizer=l2(fully_connected_l2),
                                           activation='relu'))
                     self.layers.add(Dropout(0.5))
 
@@ -139,6 +148,8 @@ class CharCNN(object):
             print("\nnn layers trainable weights length:")
             for i, w in enumerate(self.layers.trainable_weights):
                 print("layer %s: %s" % (i, str(w.get_shape())))
+            print("L2 regularization CNN layer=%.2f, FC layer=%.2f" % (cnn_l2,
+                fully_connected_l2))
 
         with tf.name_scope("training"):
             # using weighted cross-entropy loss since we have imbalanced
