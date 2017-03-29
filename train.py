@@ -27,8 +27,8 @@ tf.flags.DEFINE_integer("evaluate_every", 5000,
                         (default: 5000)")
 tf.flags.DEFINE_integer("checkpoint_every", 50000,
                         "Save model after this many steps (default: 50000)")
-tf.flags.DEFINE_float("learning_rate", 0.0005,
-                      "Learning Rate of the model(default:0.0005")
+tf.flags.DEFINE_float("learning_rate", 0.001,
+                      "Learning Rate of the model(default:0.001")
 tf.flags.DEFINE_string("dataset_name", "sexism_binary",
                        "Which dataset to train (default=sexism_binary")
 
@@ -42,15 +42,18 @@ tf.flags.DEFINE_string("model_size", "large",
 tf.flags.DEFINE_integer("positive_weight", 1,
                         "Weight on the positive samples for calculating loss \
                         (default: 1)")
+tf.flags.DEFINE_float("cnn_l1", 0,
+                        "L1 regularizer weight on CNN layers \
+                        (default: 0)")
+tf.flags.DEFINE_float("fully_connected_l1", 0,
+                        "L1 regularizer weight on fully connected layers \
+                        (default: 0)")
 tf.flags.DEFINE_float("cnn_l2", 0,
                         "L2 regularizer weight on CNN layers \
                         (default: 0)")
 tf.flags.DEFINE_float("fully_connected_l2", 0,
                         "L2 regularizer weight on fully connected layers \
                         (default: 0)")
-
-
-
 
 # Misc Parameters
 tf.flags.DEFINE_integer("memory_usage_percentage", 90, "Set Memory usage percentage (default:90)")
@@ -183,7 +186,9 @@ if __name__ == '__main__':
                         model_depth=FLAGS.model_depth,
                         learning_rate=FLAGS.learning_rate,
                         positive_weight=FLAGS.positive_weight,
+                        cnn_l1=FLAGS.cnn_l1,
                         cnn_l2=FLAGS.cnn_l2,
+                        fully_connected_l1=FLAGS.fully_connected_l1,
                         fully_connected_l2=FLAGS.fully_connected_l2)
     else:
         raise ValueError("Wrong model name. Please input from ngram_lr/char_cnn")
