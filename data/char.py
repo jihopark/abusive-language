@@ -32,17 +32,19 @@ def print_errors(x, true, pred):
 
     print("\nFalse Positives")
     fp = _x[errors[:, 1] == 1]
-    n_sample = len(fp) if len(fp) < 5 else 5
-    fp = fp[np.random.choice(len(fp), n_sample)]
-    for row in fp:
-        print(''.join(one_hot_to_chars(row)) + "\n")
+    if len(fp) > 0:
+        n_sample = len(fp) if len(fp) < 5 else 5
+        fp = fp[np.random.choice(len(fp), n_sample)]
+        for row in fp:
+            print(''.join(one_hot_to_chars(row)) + "\n")
 
     print("\nFalse Negatives")
     fn = _x[errors[:, 1] == 0]
-    n_sample = len(fn) if len(fn) < 5 else 5
-    fn = fn[np.random.choice(len(fn), n_sample)]
-    for row in fn:
-        print(''.join(one_hot_to_chars(row)) + "\n")
+    if len(fn) > 0:
+        n_sample = len(fn) if len(fn) < 5 else 5
+        fn = fn[np.random.choice(len(fn), n_sample)]
+        for row in fn:
+            print(''.join(one_hot_to_chars(row)) + "\n")
 
 def text_to_1hot_matrix(text, max_len):
     tokens = tokenizer.to_chars(text)
