@@ -24,6 +24,20 @@ def one_hot_to_chars(mat):
 def print_errors(x, true, pred):
     print("\nError Analysis")
     errors = np.hstack((true, np.array(pred).reshape((len(pred), 1))))
+    # get some true positives
+    correct_idx = errors[:, 0] == errors[:, 1]
+    correct_x = x[correct_idx]
+    correct_pred = errors[correct_idx]
+    tp_idx = correct_pred[:, 0] == 1
+    tp = correct_x[tp_idx]
+
+    print("\nTrue Positives")
+    if len(tp) > 0:
+        n_sample = len(tp) if len(tp) < 5 else 5
+        tp_sample = tp[np.random.choice(len(tp), n_sample)]
+        for row in tp_sample:
+            print(''.join(one_hot_to_chars(row)) + "\n")
+
 
     # leave only the wrong predictions
     error_idx = errors[:, 0] != errors[:, 1]
