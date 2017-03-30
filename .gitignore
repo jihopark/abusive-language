@@ -4,5 +4,6 @@
 /data/ngram_outputs
 /data/char_outputs
 /data/preprocessed
+/data/sentiment/tweets_preprocessed.txt
 *.swp
 /logs/*
