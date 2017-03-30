@@ -8,6 +8,7 @@ also referenced https://github.com/johnb30/py_crepe
 """
 
 import tensorflow as tf
+import numpy as np
 from keras.layers.convolutional import Convolution1D, MaxPooling1D
 from keras.layers import Dense, Dropout, Flatten
 from keras.models import Sequential
@@ -18,19 +19,26 @@ from keras.regularizers import l1_l2
 class CharCNN(object):
     N_FILTERS = {"small": 256, "large": 1024}
     FILTER_KERNELS = [7, 7, 3, 3, 3, 3]
-    POOL_SIZE = 3
     FULLY_CONNECTED_OUTPUT = {"small": 1024, "large": 2048}
     INIT_VAR = {"small": 0.05, "large": 0.02}
 
     def __init__(self, name, vocab_size, text_len, n_classes,
             learning_rate=0.01, model_size="small", model_depth="shallow",
-            positive_weight=1, fully_connected_l1=0, fully_connected_l2=0, cnn_l1=0, cnn_l2=0):
+            positive_weight=1, kernel_size=0, pool_size=3,
+            fully_connected_l1=0, fully_connected_l2=0, cnn_l1=0, cnn_l2=0):
         print("Building Character CNN graph of name " + name)
         self.name = name
         self.vocab_size = vocab_size
         self.text_len = text_len
 
         input_shape = (vocab_size, text_len)
+
+        if kernel_size > 0:
+            self.FILTER_KERNELS = np.ones(6, dtype=int)
+            self.FILTER_KERNELS.fill(kernel_size)
+            self.FILTER_KERNELS = list(map(lambda x: (x,), self.FILTER_KERNELS))
+            print("Using Kernel Size:")
+            print(self.FILTER_KERNELS)
 
         tf.reset_default_graph()
 
@@ -52,7 +60,7 @@ class CharCNN(object):
                                               activation='relu',
                                               kernel_regularizer=l1_l2(cnn_l1, cnn_l2),
                                               input_shape=(text_len, vocab_size)))
-                self.layers.add(MaxPooling1D(pool_size=self.POOL_SIZE))
+                self.layers.add(MaxPooling1D(pool_size=pool_size))
 
             with tf.name_scope("cnn-layer-1"):
                 self.layers.add(Convolution1D(self.N_FILTERS[model_size],
@@ -63,7 +71,7 @@ class CharCNN(object):
                                                     stddev=self.INIT_VAR[model_size]),
                                               kernel_regularizer=l1_l2(cnn_l1, cnn_l2),
                                               activation='relu'))
-                self.layers.add(MaxPooling1D(pool_size=self.POOL_SIZE))
+                self.layers.add(MaxPooling1D(pool_size=pool_size))
 
             if model_depth == "deep":
                 with tf.name_scope("cnn-layer-2"):
@@ -105,7 +113,7 @@ class CharCNN(object):
                                                         stddev=self.INIT_VAR[model_size]),
                                                   kernel_regularizer=l1_l2(cnn_l1, cnn_l2),
                                                   activation='relu'))
-                    self.layers.add(MaxPooling1D(pool_size=self.POOL_SIZE))
+                    self.layers.add(MaxPooling1D(pool_size=pool_size))
 
 
 

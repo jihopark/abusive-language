@@ -35,13 +35,20 @@ tf.flags.DEFINE_string("dataset_name", "sexism_binary",
 
 # CharCNN parameters
 tf.flags.DEFINE_string("model_depth", "shallow",
-                       "Depth of neural network model - choose shallow or deep (default:shallow)")
+                       "Depth of neural network model - choose shallow,deep\
+                       (default:shallow)")
 tf.flags.DEFINE_string("model_size", "large",
                        "Size of dimension of neural network model - choose \
                        small or large (default:large)")
 tf.flags.DEFINE_integer("positive_weight", 1,
                         "Weight on the positive samples for calculating loss \
                         (default: 1)")
+tf.flags.DEFINE_integer("filter_size", 4,
+                        "Filter size of the CNN kernel \
+                        (default: 4 - will use default setting)")
+tf.flags.DEFINE_integer("pool_size", 3,
+                        "Size of the Max-pool layer\
+                        (default: 3)")
 tf.flags.DEFINE_float("cnn_l1", 0,
                         "L1 regularizer weight on CNN layers \
                         (default: 0)")
@@ -186,6 +193,8 @@ if __name__ == '__main__':
                         model_depth=FLAGS.model_depth,
                         learning_rate=FLAGS.learning_rate,
                         positive_weight=FLAGS.positive_weight,
+                        pool_size=FLAGS.pool_size,
+                        kernel_size=FLAGS.filter_size,
                         cnn_l1=FLAGS.cnn_l1,
                         cnn_l2=FLAGS.cnn_l2,
                         fully_connected_l1=FLAGS.fully_connected_l1,
