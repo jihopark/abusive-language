@@ -24,7 +24,7 @@ class CharCNN(object):
 
     def __init__(self, name, vocab_size, text_len, n_classes,
             learning_rate=0.01, model_size="small", model_depth="shallow",
-            positive_weight=1, kernel_size=0, pool_size=3,
+            positive_weight=1, kernel_size=0, max_pool_type="normal_6",
             fully_connected_l1=0, fully_connected_l2=0, cnn_l1=0, cnn_l2=0):
         print("Building Character CNN graph of name " + name)
         self.name = name
@@ -39,6 +39,14 @@ class CharCNN(object):
             self.FILTER_KERNELS = list(map(lambda x: (x,), self.FILTER_KERNELS))
             print("Using Kernel Size:")
             print(self.FILTER_KERNELS)
+        if max_pool_type == "normal_6":
+            pool_size = [6, 6, 6]
+        elif max_pool_type == "half_6":
+            pool_size = [6, 3, 3]
+        else:
+            pool_size = [3, 3, 3]
+        print("Using max_pool size:")
+        print(pool_size)
 
         tf.reset_default_graph()
 
@@ -60,7 +68,7 @@ class CharCNN(object):
                                               activation='relu',
                                               kernel_regularizer=l1_l2(cnn_l1, cnn_l2),
                                               input_shape=(text_len, vocab_size)))
-                self.layers.add(MaxPooling1D(pool_size=pool_size))
+                self.layers.add(MaxPooling1D(pool_size=pool_size[0]))
 
             with tf.name_scope("cnn-layer-1"):
                 self.layers.add(Convolution1D(self.N_FILTERS[model_size],
@@ -71,7 +79,7 @@ class CharCNN(object):
                                                     stddev=self.INIT_VAR[model_size]),
                                               kernel_regularizer=l1_l2(cnn_l1, cnn_l2),
                                               activation='relu'))
-                self.layers.add(MaxPooling1D(pool_size=pool_size))
+                self.layers.add(MaxPooling1D(pool_size=pool_size[1]))
 
             if model_depth == "deep":
                 with tf.name_scope("cnn-layer-2"):
@@ -113,7 +121,7 @@ class CharCNN(object):
                                                         stddev=self.INIT_VAR[model_size]),
                                                   kernel_regularizer=l1_l2(cnn_l1, cnn_l2),
                                                   activation='relu'))
-                    self.layers.add(MaxPooling1D(pool_size=pool_size))
+                    self.layers.add(MaxPooling1D(pool_size=pool_size[2]))
 
 
 

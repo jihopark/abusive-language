@@ -20,8 +20,8 @@ from model.helper import calculate_metrics
 tf.flags.DEFINE_string("model_name", "char_cnn",
                        "Which model to train - char_cnn/ngram_lr (default=char_cnn")
 tf.flags.DEFINE_integer("batch_size", 32, "Number of batch size (default: 32)")
-tf.flags.DEFINE_integer("num_steps", 500000,
-                        "Number of training steps(default: 500000)")
+tf.flags.DEFINE_integer("num_steps", 400000,
+                        "Number of training steps(default: 400000)")
 tf.flags.DEFINE_integer("evaluate_every", 5000,
                         "Evaluate model on dev set after this many epochs \
                         (default: 5000)")
@@ -46,18 +46,21 @@ tf.flags.DEFINE_integer("positive_weight", 1,
 tf.flags.DEFINE_integer("filter_size", 4,
                         "Filter size of the CNN kernel \
                         (default: 4 - will use default setting)")
-tf.flags.DEFINE_integer("pool_size", 3,
-                        "Size of the Max-pool layer\
-                        (default: 3)")
-tf.flags.DEFINE_float("cnn_l1", 0,
+tf.flags.DEFINE_string("max_pool_type", "normal_6",
+                        "How to configure the max_pool \
+                         normal_6=pool_size is all 6, \
+                         normal_3=pool_size is all 3, \
+                         half_6=pool_size is 6 and 3 \
+                         (default: normal_6")
+tf.flags.DEFINE_float("cnn_l1", 10,
                         "L1 regularizer weight on CNN layers \
-                        (default: 0)")
+                        (default: 10)")
 tf.flags.DEFINE_float("fully_connected_l1", 0,
                         "L1 regularizer weight on fully connected layers \
                         (default: 0)")
-tf.flags.DEFINE_float("cnn_l2", 0,
+tf.flags.DEFINE_float("cnn_l2", 1,
                         "L2 regularizer weight on CNN layers \
-                        (default: 0)")
+                        (default: 1)")
 tf.flags.DEFINE_float("fully_connected_l2", 0,
                         "L2 regularizer weight on fully connected layers \
                         (default: 0)")
@@ -193,7 +196,7 @@ if __name__ == '__main__':
                         model_depth=FLAGS.model_depth,
                         learning_rate=FLAGS.learning_rate,
                         positive_weight=FLAGS.positive_weight,
-                        pool_size=FLAGS.pool_size,
+                        max_pool_type=FLAGS.max_pool_type,
                         kernel_size=FLAGS.filter_size,
                         cnn_l1=FLAGS.cnn_l1,
                         cnn_l2=FLAGS.cnn_l2,
