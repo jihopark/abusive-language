@@ -1,6 +1,32 @@
 import string
 import re
 
+from wordsegment import segment
+from nltk.tokenize import TweetTokenizer
+
+tknzr = TweetTokenizer(preserve_case=False, reduce_len=True)
+
+# tokenize words for finding word2vec embedding
+def tokenize_for_word2vec(word2vec, tweet):
+    assert word2vec != None
+    words = tknzr.tokenize(tweet)
+    tokens = []
+    in_dictionary = []
+
+    # first check if in dictionary
+    for word in words:
+        tokens.append(word)
+        in_dictionary.append(word in word2vec)
+
+    # if not segment the word ex.himan => hi, man
+    final_tokens = []
+    for i, token in enumerate(tokens):
+        if in_dictionary[i]:
+            final_tokens.append(token)
+        else:
+            segments = segment(token)
+            final_tokens += segments
+    return final_tokens
 
 # to_words
 # options = {"padStart": integer, "padEnd": integer, "includePunct":boolean}

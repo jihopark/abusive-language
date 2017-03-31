@@ -12,6 +12,8 @@
 - jupyter notebook (for debugging) 
 - tqdm (for displaying process)
 - pickle (for saving python object)
+- wordsegment
+- gensim (for word2vec)
 
 ## Scripts
 - To run ngram logistic regression classifier:
@@ -45,7 +47,7 @@
 
 ## Datasets
 1. `Hate Speech Dataset`: see `original/README.md`
-
+2. `Pretrained word2vec`: please download it at `https://drive.google.com/file/d/0B7XkCwpI5KDYNlNUTTlSS21pQmM/edit?usp=sharing` and put it in `data/`
 ## Python Style Guide
 Please follow PEP 8.
 https://www.python.org/dev/peps/pep-0008/
