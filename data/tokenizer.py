@@ -3,12 +3,13 @@ import re
 
 from wordsegment import segment
 from nltk.tokenize import TweetTokenizer
+import enchant
 
 tknzr = TweetTokenizer(preserve_case=False, reduce_len=True)
+eng_dictionary = enchant.Dict("en_US")
 
-# tokenize words for finding word2vec embedding
-def tokenize_for_word2vec(word2vec, tweet):
-    assert word2vec != None
+# tokenize words with using dictionary to segment further
+def tokenize_with_dictionary(tweet, word2vec=None):
     words = tknzr.tokenize(tweet)
     tokens = []
     in_dictionary = []
@@ -16,7 +17,8 @@ def tokenize_for_word2vec(word2vec, tweet):
     # first check if in dictionary
     for word in words:
         tokens.append(word)
-        in_dictionary.append(word in word2vec)
+        is_in_dictionary = eng_dictionary.check(word) if word2vec is None else word in word2vec
+        in_dictionary.append(is_in_dictionary)
 
     # if not segment the word ex.himan => hi, man
     final_tokens = []
