@@ -6,7 +6,9 @@ import os
 import tensorflow as tf
 from keras import backend as K
 import numpy as np
+import gensim
 
+from data.word import load_data_from_file as load_data_cnn
 from data.ngrams import load_data_from_file as load_data_ngram
 from data.char import load_data_from_file as load_data_char
 from data.char import print_errors as print_errors_char
@@ -14,6 +16,7 @@ from data.utils import balanced_batch_gen, rand_batch_gen
 
 from model.lr import LinearRegression
 from model.char_cnn import CharCNN
+from model.word_cnn import WordCNN
 from model.helper import calculate_metrics
 
 # Training parameters
@@ -202,6 +205,8 @@ if __name__ == '__main__':
                         cnn_l2=FLAGS.cnn_l2,
                         fully_connected_l1=FLAGS.fully_connected_l1,
                         fully_connected_l2=FLAGS.fully_connected_l2)
+    elif FLAGS.model_name == "word_cnn":
+        x_train, y_train, x_valid, y_valid, x_test, y_test, initW, vocab = load_data_cnn(FLAGS.dataset_name)
     else:
         raise ValueError("Wrong model name. Please input from ngram_lr/char_cnn")
 

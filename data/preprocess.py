@@ -5,23 +5,8 @@ import pandas as pd
 
 from . import utils
 
-from . import tokenizer
-from tensorflow.contrib import learn
-
-
 # minimum word count for a tweet. tweet less than this will be removed
 MIN_WORDS = 2
-
-def create_vocabulary_dataset(word2vec, data):
-    x_tokenized = list(map(lambda x: tokenizer.tokenize_for_word2vec(word2vec, x), data))
-    print("Tokenizing tweets with tokenize_for_word2vec\n")
-    print(x_tokenized[:10])
-    max_document_length = max([len(x) for x in x_tokenized])
-    vocab_processor = learn.preprocessing.VocabularyProcessor(max_document_length, min_frequency=2)
-    x_joined = list(map(lambda x: " ".join(x), x_tokenized))
-    x_vocab = np.array(list(vocab_processor.fit_transform(x_joined)))
-    print("changed data %s into %s" % (str(data.shape), str(x_vocab.shape)))
-    return vocab_processor, max_document_length, x_vocab
 
 def is_url(s):
     urls = re.findall(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', s)
