@@ -5,6 +5,7 @@
 *.txt
 /data/ngram_outputs
 /data/char_outputs
+/data/word_outputs
 /data/preprocessed
 /data/GoogleNews-vectors-negative300.bin
 /data/sentiment/tweets_preprocessed.txt

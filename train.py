@@ -68,6 +68,10 @@ tf.flags.DEFINE_float("fully_connected_l2", 0,
                         "L2 regularizer weight on fully connected layers \
                         (default: 0)")
 
+#WordCNN parameters
+tf.flags.DEFINE_string("word_cnn_filter_sizes", "3,4,5", "Comma-separated filter sizes (default: '3,4,5')")
+tf.flags.DEFINE_integer("word_cnn_num_filters", 128, "Number of filters per filter size (default: 128)")
+
 # Misc Parameters
 tf.flags.DEFINE_integer("memory_usage_percentage", 90, "Set Memory usage percentage (default:90)")
 tf.flags.DEFINE_string("log_dir", "",
@@ -207,6 +211,16 @@ if __name__ == '__main__':
                         fully_connected_l2=FLAGS.fully_connected_l2)
     elif FLAGS.model_name == "word_cnn":
         x_train, y_train, x_valid, y_valid, x_test, y_test, initW, vocab = load_data_cnn(FLAGS.dataset_name)
+
+        model = WordCNN(sequence_length=x_train.shape[1],
+                num_classes=2,
+                vocab_size=len(vocab.vocabulary_),
+                filter_sizes=list(map(int, FLAGS.word_cnn_filter_sizes.split(","))),
+                num_filters=FLAGS.word_cnn_num_filters,
+                embedding_size=300,
+                l2_reg_lambda=0.0, embedding_static=False,
+                word2vec_multi=False,
+                learning_rate=FLAGS.learning_rate)
     else:
         raise ValueError("Wrong model name. Please input from ngram_lr/char_cnn")
 
