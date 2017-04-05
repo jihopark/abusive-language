@@ -66,9 +66,12 @@ def save_word_cnn(data, data_name):
     np.save(file_path + "/x_train.npy", x_train)
     np.save(file_path + "/x_valid.npy", x_valid)
     np.save(file_path + "/x_test.npy", x_test)
-    np.save(file_path + "/y_train.npy", data["y_train"])
-    np.save(file_path + "/y_valid.npy", data["y_valid"])
-    np.save(file_path + "/y_test.npy", data["y_test"])
+    np.save(file_path + "/y_train.npy",
+            data["y_train"].reshape(len(x_train), 1))
+    np.save(file_path + "/y_valid.npy",
+            data["y_valid"].reshape(len(x_valid), 1))
+    np.save(file_path + "/y_test.npy",
+            data["y_test"].reshape(len(x_test), 1))
 
 
 def load_data_from_file(data_name):

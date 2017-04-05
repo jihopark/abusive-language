@@ -12,7 +12,7 @@
 - jupyter notebook (for debugging) 
 - tqdm (for displaying process)
 - pickle (for saving python object)
-- wordsegment
+- wordsegment, pyenchant (for preprocessing words)
 - gensim (for word2vec)
 
 ## Scripts

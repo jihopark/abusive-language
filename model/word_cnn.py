@@ -10,17 +10,25 @@ import tensorflow as tf
 
 class WordCNN(object):
     def __init__(
-            self, sequence_length, num_classes, vocab_size,
+            self, name, sequence_length, n_classes, vocab_size,
             filter_sizes, num_filters,
             embedding_size=300,
             l2_reg_lambda=0.0, embedding_static=False,
             word2vec_multi=False, learning_rate=0.001):
+        self.name = name
+        self.vocab_size = vocab_size
+        self.sequence_length = sequence_length
 
         # Placeholders for input, output and dropout
-        self.input_x = tf.placeholder(
-            tf.int32, [None, sequence_length], name="input_x")
-        self.input_y = tf.placeholder(
-            tf.float32, [None, num_classes], name="input_y")
+        with tf.name_scope("input"):
+            self.X = tf.placeholder(
+                tf.int32, [None, sequence_length], name="X")
+            self.labels = tf.placeholder(
+                tf.int64, [None, 1], name="labels")
+            self.labels_one_hot = tf.cast(tf.reshape(tf.one_hot(self.labels,
+                                                                depth=n_classes), [-1, 2]),
+                                                                dtype="float32")
+
         self.dropout_keep_prob = tf.placeholder(
             tf.float32, name="dropout_keep_prob")
 
@@ -34,7 +42,7 @@ class WordCNN(object):
                 tf.random_uniform([vocab_size, embedding_size], -1.0, 1.0),
                 trainable=not embedding_static,
                 name="W")
-            self.embedded_chars = tf.nn.embedding_lookup(self.W, self.input_x)
+            self.embedded_chars = tf.nn.embedding_lookup(self.W, self.X)
             # Add channel dimension to make it [None, sequence_length,
             # embedding_size, 1]
             self.embedded_chars_expanded = tf.expand_dims(
@@ -45,7 +53,7 @@ class WordCNN(object):
                     tf.random_uniform([vocab_size, embedding_size], -1.0, 1.0),
                     name="W2")
                 self.embedded_chars_2 = tf.nn.embedding_lookup(
-                    self.W2, self.input_x)
+                    self.W2, self.X)
                 # Add channel dimension to make it [None, sequence_length,
                 # embedding_size, 1]
                 self.embedded_chars_expanded_2 = tf.expand_dims(
@@ -89,7 +97,7 @@ class WordCNN(object):
 
         # Combine all the pooled features
         num_filters_total = num_filters * len(filter_sizes) * len(channels)
-        self.h_pool = tf.concat(3, pooled_outputs)
+        self.h_pool = tf.concat(pooled_outputs, 3)
         self.h_pool_flat = tf.reshape(self.h_pool, [-1, num_filters_total])
 
         # Add dropout
@@ -97,27 +105,27 @@ class WordCNN(object):
             self.h_drop = tf.nn.dropout(
                 self.h_pool_flat, self.dropout_keep_prob)
 
-        # Final (unnormalized) scores and predictions
+        # Final (unnormalized) logits and predictions
         with tf.name_scope("output"):
             W = tf.get_variable(
                 "W",
-                shape=[num_filters_total, num_classes],
+                shape=[num_filters_total, n_classes],
                 initializer=tf.contrib.layers.xavier_initializer())
-            b = tf.Variable(tf.constant(0.1, shape=[num_classes]), name="b")
+            b = tf.Variable(tf.constant(0.1, shape=[n_classes]), name="b")
             l2_loss += tf.nn.l2_loss(W)
             l2_loss += tf.nn.l2_loss(b)
-            self.scores = tf.nn.xw_plus_b(self.h_drop, W, b, name="scores")
-            self.predictions = tf.argmax(self.scores, 1, name="predictions")
+            self.logits = tf.nn.xw_plus_b(self.h_drop, W, b, name="logits")
+            self.prediction = tf.argmax(self.logits, 1, name="prediction")
 
         # CalculateMean cross-entropy loss
         with tf.name_scope("training"):
             losses = tf.nn.softmax_cross_entropy_with_logits(
-                self.scores, self.input_y)
-            self.loss = tf.reduce_mean(losses) + l2_reg_lambda * l2_loss
-            tf.summary.scalar("cost", self.loss)
+                logits=self.logits, labels=self.labels_one_hot)
+            self.cost = tf.reduce_mean(losses) + l2_reg_lambda * l2_loss
+            tf.summary.scalar("cost", self.cost)
             global_step = tf.Variable(0, name="global_step", trainable=False)
-            tf.optimizer = tf.train.AdamOptimizer(learning_rate)
-            grads_and_vars = optimizer.compute_gradients(self.loss)
-            self.train_op = optimizer.apply_gradients(grads_and_vars, global_step=global_step)
+            self.optimizer = tf.train.AdamOptimizer(learning_rate)
+            grads_and_vars = self.optimizer.compute_gradients(self.cost)
+            self.train_op = self.optimizer.apply_gradients(grads_and_vars, global_step=global_step)
 
         self.merge_summary = tf.summary.merge_all()

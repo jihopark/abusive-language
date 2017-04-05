@@ -6,7 +6,6 @@ import os
 import tensorflow as tf
 from keras import backend as K
 import numpy as np
-import gensim
 
 from data.word import load_data_from_file as load_data_cnn
 from data.ngrams import load_data_from_file as load_data_ngram
@@ -20,7 +19,7 @@ from model.word_cnn import WordCNN
 from model.helper import calculate_metrics
 
 # Training parameters
-tf.flags.DEFINE_string("model_name", "char_cnn",
+tf.flags.DEFINE_string("model_name", "word_cnn",
                        "Which model to train - char_cnn/ngram_lr (default=char_cnn")
 tf.flags.DEFINE_integer("batch_size", 32, "Number of batch size (default: 32)")
 tf.flags.DEFINE_integer("num_steps", 400000,
@@ -70,7 +69,7 @@ tf.flags.DEFINE_float("fully_connected_l2", 0,
 
 #WordCNN parameters
 tf.flags.DEFINE_string("word_cnn_filter_sizes", "3,4,5", "Comma-separated filter sizes (default: '3,4,5')")
-tf.flags.DEFINE_integer("word_cnn_num_filters", 128, "Number of filters per filter size (default: 128)")
+tf.flags.DEFINE_integer("word_cnn_num_filters", 100, "Number of filters per filter size (default: 100)")
 
 # Misc Parameters
 tf.flags.DEFINE_integer("memory_usage_percentage", 90, "Set Memory usage percentage (default:90)")
@@ -89,8 +88,8 @@ def train_batch(model, sess, train_batch_gen):
     feed_dict = {
         model.labels: batchY,
         model.X: batchX,
-        K.learning_phase(): 1 # whether to use dropout or not
         }
+    feed_dict.update(add_drop_out(model, 0.5))
     sess.run([model.train_op], feed_dict)
     return feed_dict
 
@@ -99,9 +98,17 @@ def eval(model, sess, x_eval, y_eval):
     feed_dict = {
         model.labels: y_eval,
         model.X: x_eval,
-        K.learning_phase(): 0 # whether to use dropout or not
         }
+    feed_dict.update(add_drop_out(model, 1.0))
     return sess.run([model.merge_summary, model.cost, model.prediction], feed_dict)
+
+def add_drop_out(model, probability):
+    if FLAGS.model_name == "word_cnn":
+        return {model.dropout_keep_prob: probability}
+    elif FLAGS.model_name == "char_cnn":
+        value = 1 if probability < 1 else 0
+        return {K.learning_phase(): value}
+    return {}
 
 def save_ckpt(sess, saver, path):
     save_path = saver.save(sess, path)
@@ -142,19 +149,21 @@ def train(model, train_set, valid_set, sess, train_iter):
                 print("Precision=%.4f, Recall=%.4f, F1=%.4f" % (train_precision,
                                                                 train_recall,
                                                                 train_f1
-                                                                ))
+                                                               ))
                 train_writer.add_summary(summary, i)
 
                 logits = sess.run(model.logits, feed_dict)
                 print(logits[0:20])
             if i % FLAGS.evaluate_every == 0:
-                summary, cost, pred = eval(model, sess, x_valid, y_valid)
-                valid_precision, valid_recall, valid_f1 = calculate_metrics(y_valid, pred, valid_writer, i)
-                print_errors(x_valid, y_valid, pred)
+                summary, cost, pred = eval(model, sess, valid_set["x"], valid_set["y"])
+                valid_precision, valid_recall, valid_f1 = calculate_metrics(valid_set["y"],
+                                                                            pred,
+                                                                            valid_writer, i)
+                print_errors(valid_set["x"], valid_set["y"], pred)
                 print("\n**Validation set cost=%.4f" % cost)
                 print("Precision=%.4f, Recall=%.4f, F1=%.4f\n" % (valid_precision,
-                                                                valid_recall,
-                                                                valid_f1))
+                                                                  valid_recall,
+                                                                  valid_f1))
                 valid_writer.add_summary(summary, i)
             if i % FLAGS.checkpoint_every == 0:
                 save_ckpt(sess, saver, ckpt_path + ("/model-%s.ckpt" % i))
@@ -210,17 +219,23 @@ if __name__ == '__main__':
                         fully_connected_l1=FLAGS.fully_connected_l1,
                         fully_connected_l2=FLAGS.fully_connected_l2)
     elif FLAGS.model_name == "word_cnn":
-        x_train, y_train, x_valid, y_valid, x_test, y_test, initW, vocab = load_data_cnn(FLAGS.dataset_name)
+        name = FLAGS.dataset_name
+        x_train, y_train, x_valid, y_valid, x_test, y_test, initW, vocab = load_data_cnn(name)
+        text_len = x_train.shape[1]
+        vocab_size = len(vocab.vocabulary_)
+        print("\nInitializing the WordCNN Model with vocab_size=%s,text_len=%s" \
+                % (vocab_size, text_len))
 
-        model = WordCNN(sequence_length=x_train.shape[1],
-                num_classes=2,
-                vocab_size=len(vocab.vocabulary_),
-                filter_sizes=list(map(int, FLAGS.word_cnn_filter_sizes.split(","))),
-                num_filters=FLAGS.word_cnn_num_filters,
-                embedding_size=300,
-                l2_reg_lambda=0.0, embedding_static=False,
-                word2vec_multi=False,
-                learning_rate=FLAGS.learning_rate)
+
+        model = WordCNN(name, sequence_length=text_len,
+                        n_classes=2,
+                        vocab_size=vocab_size,
+                        filter_sizes=list(map(int, FLAGS.word_cnn_filter_sizes.split(","))),
+                        num_filters=FLAGS.word_cnn_num_filters,
+                        embedding_size=300,
+                        l2_reg_lambda=0.0, embedding_static=True,
+                        word2vec_multi=False,
+                        learning_rate=FLAGS.learning_rate)
     else:
         raise ValueError("Wrong model name. Please input from ngram_lr/char_cnn")
 
@@ -236,5 +251,12 @@ if __name__ == '__main__':
                                                y_train,
                                                FLAGS.batch_size)
     with tf.Session(config=session_conf) as sess:
-        K.set_session(sess)
-        train(model, train_batch_generator, None, sess, FLAGS.num_steps)
+        if FLAGS.model_name == "char_cnn":
+            K.set_session(sess)
+        elif FLAGS.model_name == "word_cnn":
+            print("Initializing pre-trained word2vec embeddings \
+                    shape init:%s tensor:%s"
+                    % (str(initW.shape), str(model.W.get_shape())))
+            sess.run(model.W.assign(initW))
+        train(model, train_batch_generator, {"x": x_valid, "y": y_valid}, sess, FLAGS.num_steps)
+
