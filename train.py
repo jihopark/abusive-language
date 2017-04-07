@@ -10,12 +10,16 @@ import numpy as np
 from data.word import load_data_from_file as load_data_cnn
 from data.ngrams import load_data_from_file as load_data_ngram
 from data.char import load_data_from_file as load_data_char
+from data.hybrid import load_data_from_file as load_data_hybrid
+
+from data.hybrid import extract_from_batch
 from data.char import print_errors as print_errors_char
 from data.utils import balanced_batch_gen, rand_batch_gen
 
 from model.lr import LinearRegression
 from model.char_cnn import CharCNN
 from model.word_cnn import WordCNN
+from model.hybrid_cnn import HybridCNN
 from model.helper import calculate_metrics
 
 # Training parameters
@@ -71,6 +75,14 @@ tf.flags.DEFINE_float("fully_connected_l2", 0,
 tf.flags.DEFINE_string("word_cnn_filter_sizes", "1,2,3", "Comma-separated filter sizes (default: '1,2,3')")
 tf.flags.DEFINE_integer("word_cnn_num_filters", 50, "Number of filters per filter size (default: 50)")
 
+#Hybrid CNN parameters
+tf.flags.DEFINE_string("hybrid_word_filter_sizes", "1,2,3",
+                       "Comma-separated filter sizes (default: '1,2,3')")
+tf.flags.DEFINE_string("hybrid_char_filter_sizes", "3,4,5",
+                       "Comma-separated filter sizes (default: '3,4,5')")
+tf.flags.DEFINE_integer("hybrid_cnn_num_filters", 50, "Number of filters per filter size (default: 50)")
+
+
 # Misc Parameters
 tf.flags.DEFINE_integer("memory_usage_percentage", 90, "Set Memory usage percentage (default:90)")
 tf.flags.DEFINE_string("log_dir", "",
@@ -85,25 +97,32 @@ tf.logging.set_verbosity(tf.logging.ERROR)
 def train_batch(model, sess, train_batch_gen):
     # get batches
     batchX, batchY = train_batch_gen.__next__()
-    feed_dict = {
-        model.labels: batchY,
-        model.X: batchX,
-        }
+    feed_dict = {model.labels: batchY}
+    if FLAGS.model_name == "hybrid_cnn":
+        batchW, batchC = extract_from_batch(batchX)
+        feed_dict.update({model.X_word: batchW})
+        feed_dict.update({model.X_char: batchC})
+    else:
+        feed_dict.update({model.X: batchX})
     feed_dict.update(add_drop_out(model, 0.5))
     sess.run([model.train_op], feed_dict)
     return feed_dict
 
 def eval(model, sess, x_eval, y_eval):
-   # assert x_eval.shape[1] == model.n_dim
-    feed_dict = {
-        model.labels: y_eval,
-        model.X: x_eval,
-        }
+    feed_dict = {model.labels: y_eval}
+
+    if FLAGS.model_name == "hybrid_cnn":
+        batchW, batchC = extract_from_batch(x_eval)
+        feed_dict.update({model.X_word: batchW})
+        feed_dict.update({model.X_char: batchC})
+    else:
+        feed_dict.update({model.X: x_eval})
+
     feed_dict.update(add_drop_out(model, 1.0))
     return sess.run([model.merge_summary, model.cost, model.prediction], feed_dict)
 
 def add_drop_out(model, probability):
-    if FLAGS.model_name == "word_cnn":
+    if FLAGS.model_name == "word_cnn" or FLAGS.model_name == "hybrid_cnn":
         return {model.dropout_keep_prob: probability}
     elif FLAGS.model_name == "char_cnn":
         value = 1 if probability < 1 else 0
@@ -177,6 +196,7 @@ def train(model, train_set, valid_set, sess, train_iter):
     sess.close()
 
 if __name__ == '__main__':
+    name = FLAGS.dataset_name
     if FLAGS.model_name == "ngram_lr":
         # racism word ngram
         name = "racism_binary_word_pad_none_3gram"
@@ -195,8 +215,6 @@ if __name__ == '__main__':
         print("\nInitializing the Logistic Regression Model with n_features=%s" % n_dim)
         model = LinearRegression(n_dim, name=name)
     elif FLAGS.model_name == "char_cnn":
-        name = FLAGS.dataset_name
-
         x_train, y_train, x_valid, y_valid, x_test, y_test = load_data_char(name)
         text_len = x_train.shape[1]
         vocab_size = x_train.shape[2]
@@ -219,8 +237,11 @@ if __name__ == '__main__':
                         fully_connected_l1=FLAGS.fully_connected_l1,
                         fully_connected_l2=FLAGS.fully_connected_l2)
     elif FLAGS.model_name == "word_cnn":
-        name = FLAGS.dataset_name
-        x_train, y_train, x_valid, y_valid, x_test, y_test, initW, vocab = load_data_cnn(name)
+        (x_train, y_train,
+         x_valid, y_valid,
+         x_test, y_test,
+         initW, vocab) = load_data_cnn(name)
+
         text_len = x_train.shape[1]
         vocab_size = len(vocab.vocabulary_)
         print("\nInitializing the WordCNN Model with vocab_size=%s,text_len=%s" \
@@ -236,12 +257,32 @@ if __name__ == '__main__':
                         l2_reg_lambda=FLAGS.cnn_l2, embedding_static=True,
                         word2vec_multi=False,
                         learning_rate=FLAGS.learning_rate)
-    else:
-        raise ValueError("Wrong model name. Please input from ngram_lr/char_cnn")
+    elif FLAGS.model_name == "hybrid_cnn":
+        (x_train, y_train,
+         x_valid, y_valid,
+         x_test, y_test,
+         initW, vocab) = load_data_hybrid(name)
 
-    print("training data x_shape:%s, y_shape:%s" % (str(x_train.shape), str(y_train.shape)))
-    print("validation data x_shape:%s, y_shape:%s" % (str(x_valid.shape), str(y_valid.shape)))
-    print("test data x_shape:%s, y_shape:%s" % (str(x_test.shape), str(y_test.shape)))
+        word_text_len = x_train[0]["word"].shape[0]
+        word_vocab_size = len(vocab.vocabulary_)
+
+        char_text_len = x_train[0]["char"].shape[0]
+        char_vocab_size = x_train[0]["char"].shape[1]
+
+        model = HybridCNN(name,
+                          word_len=word_text_len, char_len=char_text_len,
+                          n_classes=2,
+                          word_vocab_size=word_vocab_size,
+                          char_vocab_size=char_vocab_size,
+                          word_filter_sizes=list(map(int, FLAGS.hybrid_word_filter_sizes.split(","))),
+                          char_filter_sizes=list(map(int, FLAGS.hybrid_char_filter_sizes.split(","))),
+                          num_filters=FLAGS.hybrid_cnn_num_filters,
+                          embedding_size=300,
+                          l2_reg_lambda=FLAGS.cnn_l2, embedding_static=True,
+                          learning_rate=FLAGS.learning_rate)
+    else:
+        raise ValueError("Wrong model name. Please input from \
+                ngram_lr/char_cnn/word_cnn/hybrid_cnn")
 
     # create session for training
     gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=FLAGS.memory_usage_percentage/100)
