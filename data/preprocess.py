@@ -78,13 +78,13 @@ def load_from_file(name):
 
     data_types = ["train", "valid", "test"]
     file_format = "%s_%s.txt"
-    for _type in data_types:
-        if not os.path.isfile(path + (file_format % (_type, name))):
-            raise ValueError("preprocessed file not created yet. please run data/preprocess.py first")
+    data_types = list(filter(lambda _type: os.path.isfile(path + file_format % (_type, name)),
+                             data_types))
+    if len(data_types) < 2:
+        raise ValueError("preprocessed file not created yet. please run splitting_dataset.ipynb first")
 
     result = {}
     for _type in data_types:
-        count = 0
         with open(path + (file_format % (_type, name))) as f:
             x_list = []
             y_list = []
@@ -100,52 +100,29 @@ def load_from_file(name):
     return result
 
 # splits the dataset into train, valid, test into txt files
-def load_preprocessed_data(data_name):
-    assert data_name in ["sexism_binary", "racism_binary"]
+def save_preprocessed_data(data_name, hasValid=True, data_=None):
     path = os.path.dirname(os.path.abspath(__file__)) + "/preprocessed/"
     if not os.path.exists(path):
         os.makedirs(path)
+    data_types = ["train", "test"]
+    if hasValid:
+        data_types.append("valid")
 
     should_load_file = False
-    for name in ["train_racism_binary.txt", "valid_racism_binary.txt", "test_racism_binary.txt",
-                "train_sexism_binary.txt", "valid_sexism_binary.txt", "test_sexism_binary.txt"]:
-        if not os.path.isfile(path + name):
+    for data_type in data_types:
+        if not os.path.isfile(path + "%s_%s.txt" % (data_type, data_name)):
             should_load_file = True
             break
-
-    if should_load_file:
-        data = concat_unshared_task_datasets()
-        # racism binary
-        x_racism_train, y_racism_train, x_racism_valid, y_racism_valid, x_racism_test, y_racism_test = utils.split_dataset_binary(x_neg=data["none"], x_pos=data["racism"])
-
-        # sexism binary
-        x_sexism_train, y_sexism_train, x_sexism_valid, y_sexism_valid, x_sexism_test, y_sexism_test = utils.split_dataset_binary(x_neg=data["none"], x_pos=data["sexism"])
-
-        pipeline = [
-            ("train_racism_binary", x_racism_train, y_racism_train),
-            ("valid_racism_binary", x_racism_valid, y_racism_valid),
-            ("test_racism_binary", x_racism_test, y_racism_test),
-            ("train_sexism_binary", x_sexism_train, y_sexism_train),
-            ("valid_sexism_binary", x_sexism_valid, y_sexism_valid),
-            ("test_sexism_binary", x_sexism_test, y_sexism_test)
-        ]
-        for file_name, x, y in pipeline:
-            with open(path + "%s.txt" % file_name, "w") as f:
+    if should_load_file and data_ is not None:
+        for data_type in data_types:
+            file_name = "%s_%s.txt" % (data_type, data_name)
+            with open(path + file_name, "w") as f:
+                x, y = data_[data_type]
                 for i in range(len(x)):
                     try:
                         f.write("%s\t%s\n" % (x[i], y[i]))
                     except UnicodeEncodeError:
                         print("unicode encode error. skipping line")
-                print("Wrote on %s.txt" % file_name)
-
-        if data_name == "sexism_binary":
-            return {"x_train": x_sexism_train, "y_train": y_sexism_train,
-                    "x_valid": x_sexism_valid, "y_valid": y_sexism_valid,
-                    "x_test": x_sexism_test, "y_test": y_sexism_test}
-        elif data_name == "racism_binary":
-            return {"x_train": x_racism_train, "y_train": y_racism_train,
-                    "x_valid": x_racism_valid, "y_valid": y_racism_valid,
-                    "x_test": x_racism_test, "y_test": y_racism_test}
+                print("Wrote on %s" % file_name)
     else:
         print("preprocessed file already exists in " + path)
-        return load_from_file(data_name)
