@@ -14,7 +14,7 @@ def batch_gen(x, y, batch_size):
 def rand_batch_gen(x, y, batch_size):
     while True:
         sample_idx = sample(list(np.arange(len(x))), batch_size)
-        yield x[sample_idx], y[sample_idx]
+        yield [x[i] for i in sample_idx], [y[i] for i in sample_idx]
 
 # batch generator that gives out balanced batch for each class
 def balanced_batch_gen(x, y, batch_size, balance=[0.5, 0.5]):
@@ -25,10 +25,10 @@ def balanced_batch_gen(x, y, batch_size, balance=[0.5, 0.5]):
 
     idx_1 = np.where( y == classes[0])[0]
     idx_2 = np.where( y == classes[1])[0]
-    x_1 = x[idx_1]
-    x_2 = x[idx_2]
-    y_1 = y[idx_1]
-    y_2 = y[idx_2]
+    x_1 = [x[i] for i in idx_1]
+    x_2 = [x[i] for i in idx_2]
+    y_1 = [y[i] for i in idx_1]
+    y_2 = [y[i] for i in idx_2]
 
     print("Generating batch of %s with distribution of %.2f %.2f" %
             (batch_size, balance[0], balance[1]))
@@ -38,8 +38,12 @@ def balanced_batch_gen(x, y, batch_size, balance=[0.5, 0.5]):
                 int(batch_size*balance[0]))
         sample_idx_2 = sample(list(np.arange(len(x_2))),
                 int(batch_size*balance[1]))
-        yield (np.concatenate((x_1[sample_idx_1], x_2[sample_idx_2])),
-               np.concatenate((y_1[sample_idx_1], y_2[sample_idx_2])))
+        yield (np.concatenate(
+                ([x_1[i] for i in sample_idx_1],
+                 [x_2[i] for i in sample_idx_2])),
+               np.concatenate(
+                ([y_1[i] for i in sample_idx_1],
+                 [y_2[i] for i in sample_idx_2])))
 
 
 def train_test_split_in_chunk(x, y, test_size, n=5):
