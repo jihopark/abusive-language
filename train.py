@@ -68,8 +68,8 @@ tf.flags.DEFINE_float("fully_connected_l2", 0,
                         (default: 0)")
 
 #WordCNN parameters
-tf.flags.DEFINE_string("word_cnn_filter_sizes", "3,4,5", "Comma-separated filter sizes (default: '3,4,5')")
-tf.flags.DEFINE_integer("word_cnn_num_filters", 100, "Number of filters per filter size (default: 100)")
+tf.flags.DEFINE_string("word_cnn_filter_sizes", "1,2,3", "Comma-separated filter sizes (default: '1,2,3')")
+tf.flags.DEFINE_integer("word_cnn_num_filters", 50, "Number of filters per filter size (default: 50)")
 
 # Misc Parameters
 tf.flags.DEFINE_integer("memory_usage_percentage", 90, "Set Memory usage percentage (default:90)")
@@ -233,7 +233,7 @@ if __name__ == '__main__':
                         filter_sizes=list(map(int, FLAGS.word_cnn_filter_sizes.split(","))),
                         num_filters=FLAGS.word_cnn_num_filters,
                         embedding_size=300,
-                        l2_reg_lambda=0.0, embedding_static=True,
+                        l2_reg_lambda=FLAGS.cnn_l2, embedding_static=True,
                         word2vec_multi=False,
                         learning_rate=FLAGS.learning_rate)
     else:
