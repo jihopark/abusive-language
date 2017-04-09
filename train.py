@@ -8,7 +8,6 @@ from keras import backend as K
 import numpy as np
 
 from data.word import load_data_from_file as load_data_cnn
-from data.ngrams import load_data_from_file as load_data_ngram
 from data.char import load_data_from_file as load_data_char
 from data.hybrid import load_data_from_file as load_data_hybrid
 
@@ -23,7 +22,7 @@ from model.helper import calculate_metrics
 
 # Training parameters
 tf.flags.DEFINE_string("model_name", "word_cnn",
-                       "Which model to train - char_cnn/ngram_lr (default=char_cnn")
+                       "Which model to train - word_cnn/char_cnn/hybrid_cnn (default=word_cnn")
 tf.flags.DEFINE_integer("batch_size", 32, "Number of batch size (default: 32)")
 tf.flags.DEFINE_integer("num_steps", 400000,
                         "Number of training steps(default: 400000)")
@@ -197,24 +196,7 @@ def train(model, train_set, valid_set, sess, train_iter):
 
 if __name__ == '__main__':
     name = FLAGS.dataset_name
-    if FLAGS.model_name == "ngram_lr":
-        # racism word ngram
-        name = "racism_binary_word_pad_none_3gram"
-        train_data, valid_data, test_data, metadata = load_data_ngram(name)
-
-        x_train, y_train = train_data[:, :-1], train_data[:, [-1]]
-        x_valid, y_valid = valid_data[:, :-1], valid_data[:, [-1]]
-        x_test, y_test = test_data[:, :-1], test_data[:, [-1]]
-
-        # add x0 for bias
-        x_train = np.hstack((np.ones((x_train.shape[0], 1)), x_train))
-        x_valid = np.hstack((np.ones((x_valid.shape[0], 1)), x_valid))
-        x_test = np.hstack((np.ones((x_test.shape[0], 1)), x_test))
-
-        n_dim = x_train.shape[1]
-        print("\nInitializing the Logistic Regression Model with n_features=%s" % n_dim)
-        model = LinearRegression(n_dim, name=name)
-    elif FLAGS.model_name == "char_cnn":
+    if FLAGS.model_name == "char_cnn":
         x_train, y_train, x_test, y_test = load_data_char(name)
         text_len = x_train.shape[1]
         vocab_size = x_train.shape[2]
@@ -283,7 +265,7 @@ if __name__ == '__main__':
                           dictionary=vocab)
     else:
         raise ValueError("Wrong model name. Please input from \
-                ngram_lr/char_cnn/word_cnn/hybrid_cnn")
+                char_cnn/word_cnn/hybrid_cnn")
 
     # create session for training
     gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=FLAGS.memory_usage_percentage/100)

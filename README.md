@@ -16,38 +16,37 @@
 - gensim (for word2vec)
 
 ## Scripts
-- To run ngram logistic regression classifier:
-    1. `preprocess_ngram_lr.py` 
-        a. load the unshared task data, preprocess the tweets, and put it in one
-        b. make two binary datasets (`racism_binary`, `sexism_binary`)
-        c. split the dataset into train/valid/test and save into file (`/data/preprocessed`)
-        d. create a ngram dictionary from train dataset 
-        e. turn tweets into ngram feature dataset and save to files (`/data/ngram_outputs`)
-    2. `train_ngram_lr.py`
-        - train the logistic regression model
+1. `train.py`
 
 ## Modules
 ### data
 - `preprocess.py`: clean the tweet
 - `tokenizer.py`: tokenize text into characters/words
-- `ngrams.py`: make text into ngram features
-- `utils.py`: helpers related to dataset (splitting, batch generation)
+- `char.py`: helpers related to character features
+- `word.py`: helpers related to word features
+- `hybrid.py`: helpers related to char and word together
+- `utils.py`: helpers related to dataset (splitting, batch generation, error analysis)
 
 ### model
-- `lr.py`: linear regression model
 - `char_cnn.py`: character-level convolutional neural network
+- `word_cnn.py`: word-level convolutional neural network
+- `hybrid.py`: word & char hybrid convolutional neural network
 
 ## See run results from Tensorboard
 - after each run, the logs will be saved at `/logs/`. check command line log for the exact directory
+- use `--log_dir` option to specify the log folder
 - run `tensorboard --logdir=/logs/xxxxxx`
 - if using remote server, ssh with portforwarding -L option. ex. `ssh -L 16006:127.0.0.1:6006 jhpark@remoteserver.hk` This option will forward remote 6006 port (default port for tensorboard) to localhost 16006.
 
 ## Notebooks
 - `unshared_task_analysis/ipynb`: analysis of the Hate Speech Dataset
+- `splitting_dataset.ipynb` : scripts for splitting dataset for experiment
+- `baseline_lr.ipynb` : baseline ngram logistic regression experiments
 
 ## Datasets
 1. `Hate Speech Dataset`: see `original/README.md`
 2. `Pretrained word2vec`: please download it at `https://drive.google.com/file/d/0B7XkCwpI5KDYNlNUTTlSS21pQmM/edit?usp=sharing` and put it in `data/`
+
 ## Python Style Guide
 Please follow PEP 8.
 https://www.python.org/dev/peps/pep-0008/
