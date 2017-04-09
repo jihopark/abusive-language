@@ -3,8 +3,6 @@ import re
 import numpy as np
 import pandas as pd
 
-from . import utils
-
 # minimum word count for a tweet. tweet less than this will be removed
 MIN_WORDS = 2
 

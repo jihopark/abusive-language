@@ -16,13 +16,14 @@ class HybridCNN(object):
             embedding_size=300,
             pool_size=1,
             l2_reg_lambda=0.0, embedding_static=False,
-            learning_rate=0.001):
+            learning_rate=0.001, dictionary=None):
         print("Building Hybrid Char-Word CNN graph of name " + name)
         print("learning rate=%s, l2_lambda=%s" % (learning_rate, l2_reg_lambda))
         self.name = name
         self.word_vocab_size = word_vocab_size
         self.char_vocab_size = char_vocab_size
         self.word_len = word_len
+        self.dictionary = dictionary
 
         # Placeholders for input, output and dropout
         with tf.name_scope("input"):

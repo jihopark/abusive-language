@@ -9,6 +9,11 @@ from tensorflow.contrib import learn
 from . import preprocess
 from . import tokenizer
 
+def one_hot_to_words(row, dictionary):
+    if dictionary == None:
+        return []
+    return dictionary.reverse([row])
+
 def create_vocabulary_dataset(word2vec_model, data):
     x_tokenized = list(map(lambda x: tokenizer.tokenize_with_dictionary(x,
         word2vec_model), data))

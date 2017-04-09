@@ -14,10 +14,11 @@ class WordCNN(object):
             filter_sizes, num_filters,
             embedding_size=300,
             l2_reg_lambda=0.0, embedding_static=False,
-            word2vec_multi=False, learning_rate=0.001):
+            word2vec_multi=False, learning_rate=0.001, dictionary=None):
         self.name = name
         self.vocab_size = vocab_size
         self.sequence_length = sequence_length
+        self.dictionary = dictionary
 
         # Placeholders for input, output and dropout
         with tf.name_scope("input"):
