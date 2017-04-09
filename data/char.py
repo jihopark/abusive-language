@@ -5,6 +5,7 @@ import os
 
 import numpy as np
 from . import tokenizer
+from . import preprocess
 
 TWEET_MAX_LEN = 140
 FEATURES = list("abcdefghijklmnopqrstuvwxyz0123456789-,;.!?:’’’/\|_@#$%ˆ&*~‘+-=<>()[]{}")
@@ -69,11 +70,6 @@ def preprocess_char_cnn(splitted_data, data_name):
                           "test",
                           file_path)
 
-    make_char_1hot_matrix(splitted_data["x_valid"],
-                          splitted_data["y_valid"],
-                          "valid",
-                          file_path)
-
     make_char_1hot_matrix(splitted_data["x_train"],
                           splitted_data["y_train"],
                           "train",
@@ -83,14 +79,13 @@ def load_data_from_file(name):
     path = os.path.dirname(os.path.abspath(__file__)) + "/char_outputs/" + name
     # check if folder exists
     if not os.path.exists(path):
-        raise ValueError("no dataset exists with the name %s at path %s" % (name, path))
+        data = preprocess.load_from_file(name)
+        preprocess_char_cnn(data, name)
 
     x_train = np.load(path + "/train_data.npy")
-    x_valid = np.load(path + "/valid_data.npy")
     x_test = np.load(path + "/test_data.npy")
 
     y_train = np.load(path + "/train_labels.npy")
-    y_valid = np.load(path + "/valid_labels.npy")
     y_test = np.load(path + "/test_labels.npy")
 
     print("\nData Summary:")
@@ -102,8 +97,7 @@ def load_data_from_file(name):
         return count, count / len(y_data)
 
     print("Train: Total Positive Labels=%s (%.4f)" % count_positive(y_train))
-    print("Valid: Total Positive Labels=%s (%.4f)" % count_positive(y_valid))
     print("Test: Total Positive Labels=%s (%.4f)" % count_positive(y_test))
 
 
-    return x_train, y_train, x_valid, y_valid, x_test, y_test
+    return x_train, y_train, x_test, y_test

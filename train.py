@@ -186,8 +186,6 @@ def train(model, train_set, valid_set, sess, train_iter):
                                                                   valid_recall,
                                                                   valid_f1))
                 valid_writer.add_summary(summary, i)
-            if i % FLAGS.checkpoint_every == 0:
-                save_ckpt(sess, saver, ckpt_path + ("/model-%s.ckpt" % i))
         except KeyboardInterrupt:
             print('Interrupted by user at iteration{}'.format(i))
             break
@@ -217,7 +215,7 @@ if __name__ == '__main__':
         print("\nInitializing the Logistic Regression Model with n_features=%s" % n_dim)
         model = LinearRegression(n_dim, name=name)
     elif FLAGS.model_name == "char_cnn":
-        x_train, y_train, x_valid, y_valid, x_test, y_test = load_data_char(name)
+        x_train, y_train, x_test, y_test = load_data_char(name)
         text_len = x_train.shape[1]
         vocab_size = x_train.shape[2]
 
@@ -240,7 +238,6 @@ if __name__ == '__main__':
                         fully_connected_l2=FLAGS.fully_connected_l2)
     elif FLAGS.model_name == "word_cnn":
         (x_train, y_train,
-         x_valid, y_valid,
          x_test, y_test,
          initW, vocab) = load_data_cnn(name)
 
@@ -262,7 +259,6 @@ if __name__ == '__main__':
                         dictionary=vocab)
     elif FLAGS.model_name == "hybrid_cnn":
         (x_train, y_train,
-         x_valid, y_valid,
          x_test, y_test,
          initW, vocab) = load_data_hybrid(name)
 
@@ -304,5 +300,5 @@ if __name__ == '__main__':
                     shape init:%s tensor:%s"
                     % (str(initW.shape), str(model.W.get_shape())))
             sess.run(model.W.assign(initW))
-        train(model, train_batch_generator, {"x": x_valid, "y": y_valid}, sess, FLAGS.num_steps)
+        train(model, train_batch_generator, {"x": x_test, "y": y_test}, sess, FLAGS.num_steps)
 

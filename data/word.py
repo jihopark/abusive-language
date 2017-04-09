@@ -54,27 +54,21 @@ def save_word_cnn(data, data_name):
 
     vocab, max_len, x_vocab = create_vocabulary_dataset(pretrained_word2vec,
                                                         np.concatenate([data["x_train"],
-                                                                        data["x_valid"],
                                                                         data["x_test"]]))
     init_W = vocabulary_into_wordvec_embeddings(pretrained_word2vec, vocab)
 
     x_train = x_vocab[:len(data["x_train"])]
-    x_valid = x_vocab[len(data["x_train"]):len(data["x_train"]) + len(data["x_valid"])]
     x_test = x_vocab[len(data["x_test"])*-1:]
 
     assert len(x_train) == len(data["y_train"])
-    assert len(x_valid) == len(data["y_valid"])
     assert len(x_test) == len(data["y_test"])
 
     np.save(file_path + "/initW.npy", init_W)
     vocab.save(file_path + "/metadata.vocab")
     np.save(file_path + "/x_train.npy", x_train)
-    np.save(file_path + "/x_valid.npy", x_valid)
     np.save(file_path + "/x_test.npy", x_test)
     np.save(file_path + "/y_train.npy",
             data["y_train"].reshape(len(x_train), 1))
-    np.save(file_path + "/y_valid.npy",
-            data["y_valid"].reshape(len(x_valid), 1))
     np.save(file_path + "/y_test.npy",
             data["y_test"].reshape(len(x_test), 1))
 
@@ -82,12 +76,10 @@ def save_word_cnn(data, data_name):
 def load_data_from_file(data_name):
     file_path = os.path.dirname(os.path.abspath(__file__)) + ("/word_outputs/%s" % data_name)
     if not os.path.exists(file_path):
-        save_word_cnn(preprocess.load_preprocessed_data(data_name), data_name)
+        save_word_cnn(preprocess.load_from_file(data_name), data_name)
     return (
         np.load(file_path + "/x_train.npy"),
         np.load(file_path + "/y_train.npy"),
-        np.load(file_path + "/x_valid.npy"),
-        np.load(file_path + "/y_valid.npy"),
         np.load(file_path + "/x_test.npy"),
         np.load(file_path + "/y_test.npy"),
         np.load(file_path + "/initW.npy"),
