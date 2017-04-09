@@ -75,13 +75,14 @@ tf.flags.DEFINE_float("fully_connected_l2", 0,
 tf.flags.DEFINE_string("word_cnn_filter_sizes", "1,2,3", "Comma-separated filter sizes (default: '1,2,3')")
 tf.flags.DEFINE_integer("word_cnn_num_filters", 50, "Number of filters per filter size (default: 50)")
 
+
 #Hybrid CNN parameters
 tf.flags.DEFINE_string("hybrid_word_filter_sizes", "1,2,3",
                        "Comma-separated filter sizes (default: '1,2,3')")
 tf.flags.DEFINE_string("hybrid_char_filter_sizes", "3,4,5",
                        "Comma-separated filter sizes (default: '3,4,5')")
 tf.flags.DEFINE_integer("hybrid_cnn_num_filters", 50, "Number of filters per filter size (default: 50)")
-
+tf.flags.DEFINE_integer("hybrid_cnn_pool_size", 1, "Number of filters per filter size (default: 1)")
 
 # Misc Parameters
 tf.flags.DEFINE_integer("memory_usage_percentage", 90, "Set Memory usage percentage (default:90)")
@@ -278,6 +279,7 @@ if __name__ == '__main__':
                           char_filter_sizes=list(map(int, FLAGS.hybrid_char_filter_sizes.split(","))),
                           num_filters=FLAGS.hybrid_cnn_num_filters,
                           embedding_size=300,
+                          pool_size=FLAGS.hybrid_cnn_pool_size,
                           l2_reg_lambda=FLAGS.cnn_l2, embedding_static=True,
                           learning_rate=FLAGS.learning_rate)
     else:

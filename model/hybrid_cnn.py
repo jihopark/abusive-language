@@ -14,6 +14,7 @@ class HybridCNN(object):
             char_filter_sizes,
             num_filters,
             embedding_size=300,
+            pool_size=1,
             l2_reg_lambda=0.0, embedding_static=False,
             learning_rate=0.001):
         print("Building Hybrid Char-Word CNN graph of name " + name)
@@ -95,7 +96,7 @@ class HybridCNN(object):
                     length = word_len if n == 0 else char_len
                     pooled = tf.nn.max_pool(
                         h,
-                        ksize=[1, length - filter_size[n][i] + 1, 1, 1],
+                        ksize=[pool_size, length - filter_size[n][i] + 1, 1, 1],
                         strides=[1, 1, 1, 1],
                         padding='VALID',
                         name="pool")
