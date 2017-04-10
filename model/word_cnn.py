@@ -43,27 +43,27 @@ class WordCNN(object):
                 tf.random_uniform([vocab_size, embedding_size], -1.0, 1.0),
                 trainable=not embedding_static,
                 name="W")
-            self.embedded_chars = tf.nn.embedding_lookup(self.W, self.X)
+            self.embedded_words = tf.nn.embedding_lookup(self.W, self.X)
             # Add channel dimension to make it [None, sequence_length,
             # embedding_size, 1]
-            self.embedded_chars_expanded = tf.expand_dims(
-                self.embedded_chars, -1)
+            self.embedded_words_expanded = tf.expand_dims(
+                self.embedded_words, -1)
 
             if word2vec_multi:
                 self.W2 = tf.Variable(
                     tf.random_uniform([vocab_size, embedding_size], -1.0, 1.0),
                     name="W2")
-                self.embedded_chars_2 = tf.nn.embedding_lookup(
+                self.embedded_words_2 = tf.nn.embedding_lookup(
                     self.W2, self.X)
                 # Add channel dimension to make it [None, sequence_length,
                 # embedding_size, 1]
-                self.embedded_chars_expanded_2 = tf.expand_dims(
-                    self.embedded_chars, -1)
+                self.embedded_words_expanded_2 = tf.expand_dims(
+                    self.embedded_words, -1)
 
         # Create a convolution + maxpool layer for each filter size
-        channels = [self.embedded_chars_expanded]
+        channels = [self.embedded_words_expanded]
         if word2vec_multi:
-            channels.append(self.embedded_chars_expanded_2)
+            channels.append(self.embedded_words_expanded_2)
 
         pooled_outputs = []
 

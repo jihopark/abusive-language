@@ -50,18 +50,18 @@ class HybridCNN(object):
                 tf.random_uniform([word_vocab_size, embedding_size], -1.0, 1.0),
                 trainable=not embedding_static,
                 name="W")
-            self.embedded_chars = tf.nn.embedding_lookup(self.W, self.X_word)
+            self.embedded_words = tf.nn.embedding_lookup(self.W, self.X_word)
             # Add channel dimension to make it [None, word_len,
             # embedding_size, 1]
-            self.embedded_chars_expanded = tf.expand_dims(
-                self.embedded_chars, -1)
+            self.embedded_words_expanded = tf.expand_dims(
+                self.embedded_words, -1)
 
         # Expand dimension for char input as well and add it as a channel
         self.X_char_expanded = tf.expand_dims(self.X_char, -1)
-        channels = [self.embedded_chars_expanded, self.X_char_expanded]
+        channels = [self.embedded_words_expanded, self.X_char_expanded]
 
         print("\nWord feature shape=%s/Char feature shape=%s" %
-                (str(self.embedded_chars_expanded.get_shape().as_list()),
+                (str(self.embedded_words_expanded.get_shape().as_list()),
                  str(self.X_char_expanded.get_shape().as_list())))
 
 
