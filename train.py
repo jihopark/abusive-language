@@ -73,7 +73,6 @@ tf.flags.DEFINE_float("fully_connected_l2", 0,
 tf.flags.DEFINE_string("word_cnn_filter_sizes", "1,2,3", "Comma-separated filter sizes (default: '1,2,3')")
 tf.flags.DEFINE_integer("word_cnn_num_filters", 50, "Number of filters per filter size (default: 50)")
 
-
 #Hybrid CNN parameters
 tf.flags.DEFINE_string("hybrid_word_filter_sizes", "1,2,3",
                        "Comma-separated filter sizes (default: '1,2,3')")

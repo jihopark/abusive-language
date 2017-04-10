@@ -45,7 +45,7 @@ def load_data_from_file(name):
     X = [(x_word_train, x_char_train, x_train),
         (x_word_test, x_char_test, x_test)]
 
-    for w, c, h in X: 
+    for w, c, h in X:
         for i in range(len(w)):
             h.append({"word": w[i],
                       "char": c[i]})
