@@ -1,7 +1,6 @@
 .ipynb_checkpoints/
 *.pyc
 *.out
-*.tsv
 *.txt
 /data/ngram_outputs
 /data/char_outputs
