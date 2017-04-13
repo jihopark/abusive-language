@@ -22,7 +22,7 @@ def one_hot_to_char(row):
 def one_hot_to_chars(mat):
     return [one_hot_to_char(_row) for _row in mat]
 
-def text_to_1hot_matrix(text, max_len):
+def text_to_1hot_matrix(text, max_len=TWEET_MAX_LEN):
     tokens = tokenizer.to_chars(text)
     matrix = np.zeros((max_len, N_DIM))
     for i, t in enumerate(tokens):

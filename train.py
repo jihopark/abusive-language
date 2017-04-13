@@ -29,8 +29,8 @@ tf.flags.DEFINE_integer("num_steps", 400000,
 tf.flags.DEFINE_integer("evaluate_every", 5000,
                         "Evaluate model on dev set after this many epochs \
                         (default: 5000)")
-tf.flags.DEFINE_integer("checkpoint_every", 50000,
-                        "Save model after this many steps (default: 50000)")
+tf.flags.DEFINE_integer("checkpoint_every", 10000,
+                        "Save model after this many steps (default: 10000)")
 tf.flags.DEFINE_float("learning_rate", 0.001,
                       "Learning Rate of the model(default:0.001")
 tf.flags.DEFINE_string("dataset_name", "sexism_binary",
@@ -184,6 +184,8 @@ def train(model, train_set, valid_set, sess, train_iter):
                                                                   valid_recall,
                                                                   valid_f1))
                 valid_writer.add_summary(summary, i)
+            if i % FLAGS.checkpoint_every == 0:
+                save_ckpt(sess, saver, ckpt_path + ("/model-%s.ckpt" % i))
         except KeyboardInterrupt:
             print('Interrupted by user at iteration{}'.format(i))
             break
