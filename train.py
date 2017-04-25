@@ -35,7 +35,8 @@ tf.flags.DEFINE_float("learning_rate", 0.001,
                       "Learning Rate of the model(default:0.001")
 tf.flags.DEFINE_string("dataset_name", "sexism_binary",
                        "Which dataset to train (default=sexism_binary")
-
+tf.flags.DEFINE_boolean("measure_accuracy", False,
+                       "Whether to measure accuracy (default=sexism_binary")
 
 # CharCNN parameters
 tf.flags.DEFINE_string("model_depth", "shallow",
@@ -162,7 +163,9 @@ def train(model, train_set, valid_set, sess, train_iter):
                 summary, cost, pred = sess.run([model.merge_summary,
                                            model.cost,
                                            model.prediction], feed_dict)
-                train_precision, train_recall, train_f1 = calculate_metrics(feed_dict[model.labels], pred, train_writer, i)
+                train_precision, train_recall, train_f1 = calculate_metrics(feed_dict[model.labels],
+                                                                            pred, train_writer,
+                                                                            i, measureAccuracy=FLAGS.measure_accuracy)
                 print("Iteration %s: mini-batch cost=%.4f" % (i, cost))
                 print("Precision=%.4f, Recall=%.4f, F1=%.4f" % (train_precision,
                                                                 train_recall,
@@ -175,8 +178,8 @@ def train(model, train_set, valid_set, sess, train_iter):
             if i % FLAGS.evaluate_every == 0:
                 summary, cost, pred = eval(model, sess, valid_set["x"], valid_set["y"])
                 valid_precision, valid_recall, valid_f1 = calculate_metrics(valid_set["y"],
-                                                                            pred,
-                                                                            valid_writer, i)
+                                                                            pred, valid_writer,
+                                                                            i, measureAccuracy=FLAGS.measure_accuracy)
                 error_analysis(valid_set["x"], valid_set["y"], pred,
                         model.dictionary if hasattr(model, "dictionary") else None)
                 print("\n**Validation set cost=%.4f" % cost)
