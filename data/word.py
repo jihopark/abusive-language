@@ -40,6 +40,15 @@ def vocabulary_into_wordvec_embeddings(word2vec_model, vocab):
             word2vec_vectors.append(np.zeros(300))
     return np.array(word2vec_vectors)
 
+def fit_input_into_vocab(input, vocab):
+    x_tokenized = tokenizer.tokenize_with_dictionary(input, vocab=vocab.vocabulary_._mapping.keys())
+    print("Tokenizing tweets with tokenize_for_dictionary\n")
+    print(x_tokenized)
+    x_joined = [" ".join(x_tokenized)]
+    x_vocab = np.array(list(vocab.fit_transform(x_joined)))
+    print("changed data %s into %s" % (len(input), str(x_vocab.shape)))
+    return x_vocab
+
 
 def save_word_cnn(data, data_name):
     print("loading pretrained embedding")

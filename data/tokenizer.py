@@ -9,7 +9,7 @@ tknzr = TweetTokenizer(preserve_case=False, reduce_len=True)
 eng_dictionary = enchant.Dict("en_US")
 
 # tokenize words with using dictionary to segment further
-def tokenize_with_dictionary(tweet, word2vec=None):
+def tokenize_with_dictionary(tweet, vocab=None, word2vec=None):
     words = tknzr.tokenize(tweet)
     tokens = []
     in_dictionary = []
@@ -17,7 +17,12 @@ def tokenize_with_dictionary(tweet, word2vec=None):
     # first check if in dictionary
     for word in words:
         tokens.append(word)
-        is_in_dictionary = eng_dictionary.check(word) if word2vec is None else word in word2vec
+        if vocab:
+            is_in_dictionary = word in vocab
+        elif word2vec:
+            is_in_dictionary = word in word2vec
+        else:
+            is_in_dictionary = eng_dictionary.check(word)
         in_dictionary.append(is_in_dictionary)
 
     # if not segment the word ex.himan => hi, man
