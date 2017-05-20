@@ -26,9 +26,9 @@ class WordCNN(object):
                 tf.int32, [None, sequence_length], name="X")
             self.labels = tf.placeholder(
                 tf.int64, [None, 1], name="labels")
-            self.labels_one_hot = tf.cast(tf.reshape(tf.one_hot(self.labels,
-                                                                depth=n_classes), [-1, 2]),
-                                                                dtype="float32")
+            self.labels_one_hot = tf.cast(tf.one_hot(self.labels,
+                                                    depth=n_classes),
+                                                    dtype="float32")
 
         self.dropout_keep_prob = tf.placeholder(
             tf.float32, name="dropout_keep_prob")
@@ -98,8 +98,9 @@ class WordCNN(object):
 
         # Combine all the pooled features
         num_filters_total = num_filters * len(filter_sizes) * len(channels)
-        self.h_pool = tf.concat(pooled_outputs, 3)
-        self.h_pool_flat = tf.reshape(self.h_pool, [-1, num_filters_total])
+        self.h_pool = tf.concat(pooled_outputs, 3, name="h_pool")
+        self.h_pool_flat = tf.reshape(self.h_pool, [-1, num_filters_total],
+                name="h_pool_flat")
 
         # Add dropout
         with tf.name_scope("dropout"):
@@ -125,8 +126,9 @@ class WordCNN(object):
             self.cost = tf.reduce_mean(losses) + l2_reg_lambda * l2_loss
             tf.summary.scalar("cost", self.cost)
             global_step = tf.Variable(0, name="global_step", trainable=False)
-            self.optimizer = tf.train.AdamOptimizer(learning_rate)
+            self.optimizer = tf.train.AdamOptimizer(learning_rate, name="adam_optimizer")
             grads_and_vars = self.optimizer.compute_gradients(self.cost)
-            self.train_op = self.optimizer.apply_gradients(grads_and_vars, global_step=global_step)
+            self.train_op = self.optimizer.apply_gradients(grads_and_vars,
+                                                           global_step=global_step, name="train_op")
 
         self.merge_summary = tf.summary.merge_all()

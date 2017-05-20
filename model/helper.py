@@ -7,18 +7,22 @@ import tensorflow as tf
 from keras import backend as K
 from sklearn import metrics
 
-def calculate_metrics(y_true, y_pred, summary_writer=None, step=None, measureAccuracy=False):
+def calculate_metrics(y_true, y_pred, summary_writer=None, step=None,
+        measureAccuracy=False, num_classes=2):
     # ignoring warning message
     # UndefinedMetricWarning: F-score is ill-defined and being set to 0.0 due
     # to no predicted samples.
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
 
-        precision = metrics.precision_score(y_true, y_pred)
-        recall = metrics.recall_score(y_true, y_pred)
-        f1 = metrics.f1_score(y_true, y_pred)
+        _average = "weighted" if num_classes > 2 else "binary"
+        precision = metrics.precision_score(y_true, y_pred, average=_average)
+        recall = metrics.recall_score(y_true, y_pred, average=_average)
+        f1 = metrics.f1_score(y_true, y_pred, average=_average)
         if measureAccuracy:
             accuracy = metrics.accuracy_score(y_true, y_pred)
+        else:
+            accuracy = 0
 
     if summary_writer != None and step != None:
         summary_writer.add_summary(tf.Summary(value=[tf.Summary.Value(tag="precision",
@@ -31,6 +35,6 @@ def calculate_metrics(y_true, y_pred, summary_writer=None, step=None, measureAcc
             summary_writer.add_summary(tf.Summary(value=[tf.Summary.Value(tag="accuracy",
                                                                           simple_value=accuracy)]), global_step=step)
 
-    return precision, recall, f1
+    return precision, recall, f1, accuracy
 
 

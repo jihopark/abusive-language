@@ -14,9 +14,9 @@ def one_hot_to_words(row, dictionary):
         return []
     return dictionary.reverse([row])
 
-def create_vocabulary_dataset(word2vec_model, data):
+def create_vocabulary_dataset(word2vec_model, data, segment=True):
     x_tokenized = list(map(lambda x: tokenizer.tokenize_with_dictionary(x,
-        word2vec_model), data))
+        word2vec_model, segment), data))
     print("Tokenizing tweets with tokenize_for_word2vec\n")
     print(x_tokenized[:10])
     max_document_length = max([len(x) for x in x_tokenized])
@@ -41,19 +41,25 @@ def vocabulary_into_wordvec_embeddings(word2vec_model, vocab):
     return np.array(word2vec_vectors)
 
 def fit_input_into_vocab(input, vocab):
-    x_tokenized = tokenizer.tokenize_with_dictionary(input, vocab=vocab.vocabulary_._mapping.keys())
-    print("Tokenizing tweets with tokenize_for_dictionary\n")
-    print(x_tokenized)
-    x_joined = [" ".join(x_tokenized)]
-    x_vocab = np.array(list(vocab.fit_transform(x_joined)))
-    print("changed data %s into %s" % (len(input), str(x_vocab.shape)))
+    #x_tokenized = tokenizer.tokenize_with_dictionary(input, vocab=vocab.vocabulary_._mapping.keys())
+    #x_joined = [" ".join(x_tokenized)]
+    x_vocab = np.array(list(vocab.fit_transform(input)))
     return x_vocab
 
+def fit_list_into_vocab_and_save(input_list, vocab, path, file_name):
+    x_fit = [fit_input_into_vocab(row, vocab) for row in input_list]
+    x_fit = np.array(x_fit)
+    x_fit = x_fit.reshape((x_fit.shape[0],x_fit.shape[2]))
+    print("finished fitting")
+    print("saving %s to path %s" % (path, file_name))
+    np.save("%s/%s" % (path, file_name), x_fit)
+    print("saved")
 
-def save_word_cnn(data, data_name):
-    print("loading pretrained embedding")
-    pretrained_word2vec = gensim.models.KeyedVectors.load_word2vec_format('./data/GoogleNews-vectors-negative300.bin',
-                                                                       binary=True)
+def save_word_cnn(data, data_name, pretrained_word2vec=None, additional_source=None, segment=True):
+    if pretrained_word2vec == None:
+        print("loading pretrained embedding")
+        pretrained_word2vec = gensim.models.KeyedVectors.load_word2vec_format('./data/GoogleNews-vectors-negative300.bin',
+                                                                           binary=True)
      # check if already there
     file_path = os.path.dirname(os.path.abspath(__file__)) + ("/word_outputs/%s" % data_name)
     if os.path.exists(file_path):
@@ -61,13 +67,22 @@ def save_word_cnn(data, data_name):
         return
     os.makedirs(file_path)
 
+    texts = [data["x_train"], data["x_test"]]
+    if additional_source is not None:
+        texts.append(additional_source)
+
     vocab, max_len, x_vocab = create_vocabulary_dataset(pretrained_word2vec,
-                                                        np.concatenate([data["x_train"],
-                                                                        data["x_test"]]))
+                                                        np.concatenate(texts),
+                                                        segment)
+
     init_W = vocabulary_into_wordvec_embeddings(pretrained_word2vec, vocab)
 
     x_train = x_vocab[:len(data["x_train"])]
-    x_test = x_vocab[len(data["x_test"])*-1:]
+
+    if additional_source is not None:
+        x_test = x_vocab[len(data["x_train"]):len(additional_source)*-1]
+    else:
+        x_test = x_vocab[len(data["x_test"])*-1:]
 
     assert len(x_train) == len(data["y_train"])
     assert len(x_test) == len(data["y_test"])

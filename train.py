@@ -23,20 +23,22 @@ from model.helper import calculate_metrics
 # Training parameters
 tf.flags.DEFINE_string("model_name", "word_cnn",
                        "Which model to train - word_cnn/char_cnn/hybrid_cnn (default=word_cnn")
-tf.flags.DEFINE_integer("batch_size", 32, "Number of batch size (default: 32)")
+tf.flags.DEFINE_integer("batch_size", 30, "Number of batch size (default: 32)")
+tf.flags.DEFINE_integer("max_batch_size", 1000, "Number of maximum batch size (default:1000)")
 tf.flags.DEFINE_integer("num_steps", 400000,
                         "Number of training steps(default: 400000)")
-tf.flags.DEFINE_integer("evaluate_every", 5000,
+tf.flags.DEFINE_integer("evaluate_every", 10000,
                         "Evaluate model on dev set after this many epochs \
-                        (default: 5000)")
-tf.flags.DEFINE_integer("checkpoint_every", 10000,
-                        "Save model after this many steps (default: 10000)")
+                        (default: 10000)")
+tf.flags.DEFINE_integer("checkpoint_every", 50000,
+                        "Save model after this many steps (default: 50000)")
 tf.flags.DEFINE_float("learning_rate", 0.001,
                       "Learning Rate of the model(default:0.001")
 tf.flags.DEFINE_string("dataset_name", "sexism_binary",
                        "Which dataset to train (default=sexism_binary")
 tf.flags.DEFINE_boolean("measure_accuracy", False,
                        "Whether to measure accuracy (default=sexism_binary")
+tf.flags.DEFINE_integer("num_classes", 3, "number of classes")
 
 # CharCNN parameters
 tf.flags.DEFINE_string("model_depth", "shallow",
@@ -108,17 +110,64 @@ def train_batch(model, sess, train_batch_gen):
     return feed_dict
 
 def eval(model, sess, x_eval, y_eval):
-    feed_dict = {model.labels: y_eval}
+    feed_queue = []
+    isHybrid = FLAGS.model_name == "hybrid_cnn"
 
-    if FLAGS.model_name == "hybrid_cnn":
-        batchW, batchC = extract_from_batch(x_eval)
-        feed_dict.update({model.X_word: batchW})
-        feed_dict.update({model.X_char: batchC})
+    # need to split the batch if too big
+    if len(y_eval) > FLAGS.max_batch_size:
+        n_batches = int(len(y_eval) / FLAGS.max_batch_size)
+        print("splitting to %s batches" % n_batches)
+        _y_eval = np.array_split(y_eval, n_batches)
+        if isHybrid:
+            batchW, batchC = extract_from_batch(x_eval)
+            _batchW = np.array_split(batchW, n_batches)
+            _batchC = np.array_split(batchC, n_batches)
+        else:
+            _x_eval = np.array_split(x_eval, n_batches)
+
+        # assert each batch has equal size
+        for i in range(len(_y_eval)):
+            if isHybrid:
+                assert len(_y_eval[i]) == len(_batchW[i])
+                assert len(_batchW[i]) == len(_batchC[i])
+            else:
+                assert len(_y_eval[i]) == len(_x_eval[i])
+
+        # create feed_queue
+        for i in range(len(_y_eval)):
+            feed_dict = {model.labels: _y_eval[i]}
+            if isHybrid:
+                feed_dict.update({model.X_word: _batchW[i]})
+                feed_dict.update({model.X_char: _batchC[i]})
+            else:
+                feed_dict.update({model.X: _x_eval[i]})
+            feed_dict.update(add_drop_out(model, 1.0))
+            feed_queue.append(feed_dict)
+        assert len(feed_queue) == n_batches
     else:
-        feed_dict.update({model.X: x_eval})
+        feed_dict = {model.labels: y_eval}
+        if isHybrid:
+            batchW, batchC = extract_from_batch(x_eval)
+            feed_dict.update({model.X_word: batchW})
+            feed_dict.update({model.X_char: batchC})
+        else:
+            feed_dict.update({model.X: x_eval})
+        feed_dict.update(add_drop_out(model, 1.0))
+        feed_queue.append(feed_dict)
 
-    feed_dict.update(add_drop_out(model, 1.0))
-    return sess.run([model.merge_summary, model.cost, model.prediction], feed_dict)
+    # run feed queue
+    total_cost = 0
+    total_prediction = []
+    for feed_dict in feed_queue:
+        cost, prediction = sess.run([model.cost, model.prediction], feed_dict)
+        total_cost += cost
+        print(len(total_prediction))
+        total_prediction = np.concatenate((total_prediction, prediction))
+
+    print(len(total_prediction))
+    print(len(y_eval))
+    assert len(total_prediction) == len(y_eval)
+    return total_cost, total_prediction
 
 def add_drop_out(model, probability):
     if FLAGS.model_name == "word_cnn" or FLAGS.model_name == "hybrid_cnn":
@@ -163,31 +212,39 @@ def train(model, train_set, valid_set, sess, train_iter):
                 summary, cost, pred = sess.run([model.merge_summary,
                                            model.cost,
                                            model.prediction], feed_dict)
-                train_precision, train_recall, train_f1 = calculate_metrics(feed_dict[model.labels],
+                train_precision, train_recall, train_f1, train_accuracy = calculate_metrics(feed_dict[model.labels],
                                                                             pred, train_writer,
-                                                                            i, measureAccuracy=FLAGS.measure_accuracy)
+                                                                            i,
+                                                                            measureAccuracy=FLAGS.measure_accuracy,
+                                                                            num_classes=FLAGS.num_classes)
                 print("Iteration %s: mini-batch cost=%.4f" % (i, cost))
-                print("Precision=%.4f, Recall=%.4f, F1=%.4f" % (train_precision,
+                print("Precision=%.4f, Recall=%.4f, F1=%.4f / Accuracy=%.4f\n" % (train_precision,
                                                                 train_recall,
-                                                                train_f1
+                                                                train_f1,
+                                                                train_accuracy
                                                                ))
                 train_writer.add_summary(summary, i)
 
                 logits = sess.run(model.logits, feed_dict)
-                print(logits[0:20])
             if i % FLAGS.evaluate_every == 0:
-                summary, cost, pred = eval(model, sess, valid_set["x"], valid_set["y"])
-                valid_precision, valid_recall, valid_f1 = calculate_metrics(valid_set["y"],
+                cost, pred = eval(model, sess, valid_set["x"], valid_set["y"])
+                valid_precision, valid_recall, valid_f1, valid_accuracy = calculate_metrics(valid_set["y"],
                                                                             pred, valid_writer,
-                                                                            i, measureAccuracy=FLAGS.measure_accuracy)
+                                                                            i,
+                                                                            measureAccuracy=FLAGS.measure_accuracy,
+                                                                            num_classes=FLAGS.num_classes)
                 error_analysis(valid_set["x"], valid_set["y"], pred,
                         model.dictionary if hasattr(model, "dictionary") else None)
                 print("\n**Validation set cost=%.4f" % cost)
-                print("Precision=%.4f, Recall=%.4f, F1=%.4f\n" % (valid_precision,
+                print("Precision=%.4f, Recall=%.4f, F1=%.4f / Accuracy=%.4f\n" % (valid_precision,
                                                                   valid_recall,
-                                                                  valid_f1))
-                valid_writer.add_summary(summary, i)
-            if i % FLAGS.checkpoint_every == 0:
+                                                                  valid_f1,
+                                                                  valid_accuracy
+                                                                  ))
+                valid_writer.add_summary(tf.Summary(value=[tf.Summary.Value(tag="cost",
+                                                                            simple_value=cost)]),
+                                                                            global_step=i)
+            if i % FLAGS.checkpoint_every == 0 and i != 0:
                 save_ckpt(sess, saver, ckpt_path + ("/model-%s.ckpt" % i))
         except KeyboardInterrupt:
             print('Interrupted by user at iteration{}'.format(i))
@@ -211,7 +268,7 @@ if __name__ == '__main__':
         model = CharCNN(name,
                         text_len=text_len,
                         vocab_size=vocab_size,
-                        n_classes=2,
+                        n_classes=FLAGS.num_classes,
                         model_size=FLAGS.model_size,
                         model_depth=FLAGS.model_depth,
                         learning_rate=FLAGS.learning_rate,
@@ -234,7 +291,7 @@ if __name__ == '__main__':
 
 
         model = WordCNN(name, sequence_length=text_len,
-                        n_classes=2,
+                        n_classes=FLAGS.num_classes,
                         vocab_size=vocab_size,
                         filter_sizes=list(map(int, FLAGS.word_cnn_filter_sizes.split(","))),
                         num_filters=FLAGS.word_cnn_num_filters,
@@ -256,7 +313,7 @@ if __name__ == '__main__':
 
         model = HybridCNN(name,
                           word_len=word_text_len, char_len=char_text_len,
-                          n_classes=2,
+                          n_classes=FLAGS.num_classes,
                           word_vocab_size=word_vocab_size,
                           char_vocab_size=char_vocab_size,
                           word_filter_sizes=list(map(int, FLAGS.hybrid_word_filter_sizes.split(","))),
@@ -277,7 +334,8 @@ if __name__ == '__main__':
 
     train_batch_generator = balanced_batch_gen(x_train,
                                                y_train,
-                                               FLAGS.batch_size)
+                                               FLAGS.batch_size,
+                                               FLAGS.num_classes)
     with tf.Session(config=session_conf) as sess:
         if FLAGS.model_name == "char_cnn":
             K.set_session(sess)

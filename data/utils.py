@@ -19,33 +19,35 @@ def rand_batch_gen(x, y, batch_size):
         yield [x[i] for i in sample_idx], [y[i] for i in sample_idx]
 
 # batch generator that gives out balanced batch for each class
-def balanced_batch_gen(x, y, batch_size, balance=[0.5, 0.5]):
+def balanced_batch_gen(x, y, batch_size, num_classes=2):
     classes = np.unique(y)
 
-    # for now only works for binary classes with even number of batch_size
-    assert len(classes) == 2 and batch_size % 2 == 0
+    assert len(classes) == num_classes and batch_size % num_classes == 0
 
-    idx_1 = np.where( y == classes[0])[0]
-    idx_2 = np.where( y == classes[1])[0]
-    x_1 = [x[i] for i in idx_1]
-    x_2 = [x[i] for i in idx_2]
-    y_1 = [y[i] for i in idx_1]
-    y_2 = [y[i] for i in idx_2]
+    idx = []
+    _x = []
+    _y = []
+    for i in range(num_classes):
+        idx.append(np.where( y == classes[i])[0])
+        _x.append([x[j] for j in idx[i]])
+        _y.append([y[j] for j in idx[i]])
 
-    print("Generating batch of %s with distribution of %.2f %.2f" %
-            (batch_size, balance[0], balance[1]))
-
+    balance = 1 / num_classes
+    print("Generating balanced batch with n_classes=%s, balance=%.3f" %
+            (num_classes, balance))
     while True:
-        sample_idx_1 = sample(list(np.arange(len(x_1))),
-                int(batch_size*balance[0]))
-        sample_idx_2 = sample(list(np.arange(len(x_2))),
-                int(batch_size*balance[1]))
-        yield (np.concatenate(
-                ([x_1[i] for i in sample_idx_1],
-                 [x_2[i] for i in sample_idx_2])),
-               np.concatenate(
-                ([y_1[i] for i in sample_idx_1],
-                 [y_2[i] for i in sample_idx_2])))
+        sample_idx = []
+        for cl in range(num_classes):
+            sample_idx.append(sample(list(np.arange(len(_x[cl]))),
+                int(batch_size*balance)))
+
+        batch_x = []
+        batch_y = []
+        for cl in range(num_classes):
+            batch_x += [_x[cl][i] for i in sample_idx[cl]]
+            batch_y += [_y[cl][i] for i in sample_idx[cl]]
+
+        yield batch_x, batch_y
 
 def print_errors(x, true, pred, model_name, dictionary=None):
     def print_sample(row):
