@@ -30,8 +30,8 @@ tf.flags.DEFINE_integer("num_steps", 400000,
 tf.flags.DEFINE_integer("evaluate_every", 10000,
                         "Evaluate model on dev set after this many epochs \
                         (default: 10000)")
-tf.flags.DEFINE_integer("checkpoint_every", 50000,
-                        "Save model after this many steps (default: 50000)")
+tf.flags.DEFINE_integer("checkpoint_every", 10000,
+                        "Save model after this many steps (default: 10000)")
 tf.flags.DEFINE_float("learning_rate", 0.001,
                       "Learning Rate of the model(default:0.001")
 tf.flags.DEFINE_string("dataset_name", "sexism_binary",
@@ -232,7 +232,8 @@ def train(model, train_set, valid_set, sess, train_iter):
                                                                             pred, valid_writer,
                                                                             i,
                                                                             measureAccuracy=FLAGS.measure_accuracy,
-                                                                            num_classes=FLAGS.num_classes)
+                                                                            num_classes=FLAGS.num_classes,
+                                                                            classificationReport=True)
                 error_analysis(valid_set["x"], valid_set["y"], pred,
                         model.dictionary if hasattr(model, "dictionary") else None)
                 print("\n**Validation set cost=%.4f" % cost)

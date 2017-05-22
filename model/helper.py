@@ -8,7 +8,7 @@ from keras import backend as K
 from sklearn import metrics
 
 def calculate_metrics(y_true, y_pred, summary_writer=None, step=None,
-        measureAccuracy=False, num_classes=2):
+        measureAccuracy=False, num_classes=2, classificationReport=False):
     # ignoring warning message
     # UndefinedMetricWarning: F-score is ill-defined and being set to 0.0 due
     # to no predicted samples.
@@ -23,6 +23,9 @@ def calculate_metrics(y_true, y_pred, summary_writer=None, step=None,
             accuracy = metrics.accuracy_score(y_true, y_pred)
         else:
             accuracy = 0
+        if classificationReport:
+            print(metrics.classification_report(y_true, y_pred, digits=3,
+                                              target_names=["none", "racism","sexism"]))
 
     if summary_writer != None and step != None:
         summary_writer.add_summary(tf.Summary(value=[tf.Summary.Value(tag="precision",

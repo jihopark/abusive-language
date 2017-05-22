@@ -54,7 +54,7 @@ class CharCNN(object):
             self.X = tf.placeholder(tf.float32, [None, text_len, vocab_size])
             self.labels = tf.placeholder(tf.int64, [None, 1])
             self.labels_one_hot = tf.cast(tf.reshape(tf.one_hot(self.labels,
-                    depth=n_classes), [-1, 2]), dtype="float32")
+                    depth=n_classes), [-1, n_classes]), dtype="float32")
 
         with tf.name_scope("nn-layers"):
             self.layers = Sequential()

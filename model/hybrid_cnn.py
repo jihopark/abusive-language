@@ -33,9 +33,9 @@ class HybridCNN(object):
                 tf.float32, [None, char_len, char_vocab_size], name="X_char")
             self.labels = tf.placeholder(
                 tf.int64, [None, 1], name="labels")
-            self.labels_one_hot = tf.cast(tf.reshape(tf.one_hot(self.labels,
-                                                                depth=n_classes), [-1, 2]),
-                                                                dtype="float32")
+            self.labels_one_hot = tf.cast(tf.reshape(tf.one_hot(self.labels, depth=n_classes),
+                                                     [-1, n_classes]),
+                                                     dtype="float32")
 
         self.dropout_keep_prob = tf.placeholder(
             tf.float32, name="dropout_keep_prob")
