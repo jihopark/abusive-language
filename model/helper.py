@@ -24,8 +24,12 @@ def calculate_metrics(y_true, y_pred, summary_writer=None, step=None,
         else:
             accuracy = 0
         if classificationReport:
+            if num_classes == 3:
+                target_names = ["none", "racism", "sexism"]
+            else:
+                target_names = ["negative", "positive"]
             print(metrics.classification_report(y_true, y_pred, digits=3,
-                                              target_names=["none", "racism","sexism"]))
+                                              target_names=target_names))
 
     if summary_writer != None and step != None:
         summary_writer.add_summary(tf.Summary(value=[tf.Summary.Value(tag="precision",

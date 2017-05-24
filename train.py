@@ -39,6 +39,8 @@ tf.flags.DEFINE_string("dataset_name", "sexism_binary",
 tf.flags.DEFINE_boolean("measure_accuracy", False,
                        "Whether to measure accuracy (default=sexism_binary")
 tf.flags.DEFINE_integer("num_classes", 3, "number of classes")
+tf.flags.DEFINE_boolean("is_two_step", False, "Whether this is two step classification")
+tf.flags.DEFINE_integer("which_step", 1, "Whether it is first or second in two step classification")
 
 # CharCNN parameters
 tf.flags.DEFINE_string("model_depth", "shallow",
@@ -332,6 +334,37 @@ if __name__ == '__main__':
     # create session for training
     gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=FLAGS.memory_usage_percentage/100)
     session_conf = tf.ConfigProto(allow_soft_placement=True, gpu_options=gpu_options)
+
+    if FLAGS.is_two_step:
+        assert FLAGS.num_classes == 2
+        if FLAGS.which_step == 1:
+            for i, label in enumerate(y_train):
+                if label == 2:
+                   y_train[i] = 1
+            for i, label in enumerate(y_test):
+                if label == 2:
+                    y_test[i] = 1
+        else:
+            _x_train = []
+            _y_train = []
+            for i, label in enumerate(y_train):
+                if label != 0:
+                    _x_train.append(x_train[i])
+                    _y_train.append(label - 1)
+            _x_test = []
+            _y_test = []
+            for i, label in enumerate(y_test):
+                if label != 0:
+                    _x_test.append(x_test[i])
+                    _y_test.append(label - 1)
+            x_train = np.array(_x_train)
+            print(x_train.shape)
+            y_train = np.array(_y_train)
+            x_test = np.array(_x_test)
+            print(x_test.shape)
+            y_test = np.array(_y_test)
+            assert len(x_train) == len(y_train)
+            assert len(y_test) == len(y_test)
 
     train_batch_generator = balanced_batch_gen(x_train,
                                                y_train,
