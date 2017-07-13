@@ -2,9 +2,13 @@ import os
 import re
 import numpy as np
 import pandas as pd
+from nltk.tokenize import TweetTokenizer
 
 # minimum word count for a tweet. tweet less than this will be removed
 MIN_WORDS = 2
+
+tknzr = TweetTokenizer(reduce_len=True, preserve_case=False,
+        strip_handles=False)
 
 def is_url(s):
     urls = re.findall(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', s)
@@ -14,17 +18,16 @@ def preprocess_tweet(tweet):
     try:
         if tweet[0:2] == "RT":
             tweet = tweet[2:]
-        tokens = tweet.split()
+        tokens = tknzr.tokenize(tweet)
         tokens = filter(lambda x: x[0] != "@" and not is_url(x), tokens) # remove mentions or urls
         tokens = map(lambda x: x[1:] if x[0] == "#" else x, tokens) # remove # from hashtags
-        tokens = [w.lower() for w in tokens] # to lower case
     except UnicodeDecodeError:
         print("unicode decode error")
         return ""
     except TypeError:
         print ("type error")
         return ""
-    return " ".join(tokens) if len(tokens) >= MIN_WORDS else ""
+    return "\t".join(tokens)
 
 def dataframe_to_list(df):
     df = df.drop_duplicates()
@@ -69,58 +72,23 @@ def concat_unshared_task_datasets():
                                                           len(data["none"])))
     return data
 
-def load_from_file(name):
+def load_from_file(name, labels):
     path = os.path.dirname(os.path.abspath(__file__)) + "/preprocessed/"
     if not os.path.exists(path):
-        raise ValueError("preprocessed file not created yet. please run data/preprocess.py first")
+        raise ValueError("preprocessed file not created yet. please run \
+                data/split-dataset-waasem-davidson first")
 
     data_types = ["train", "valid", "test"]
-    file_format = "%s_%s.txt"
-    data_types = list(filter(lambda _type: os.path.isfile(path + file_format % (_type, name)),
-                             data_types))
-    if len(data_types) < 2:
-        raise ValueError("preprocessed file not created yet. please run splitting_dataset.ipynb first")
+    file_format = "%s_%s_%s.txt"
 
     result = {}
     for _type in data_types:
-        with open(path + (file_format % (_type, name))) as f:
-            x_list = []
-            y_list = []
-            for line in f:
-                x,y = line.split("\t")
-                x_list.append(x)
-                y_list.append(float(y.rstrip()))
-
-        # separate matrix into x, y
-        result["x_" + _type] = np.array(x_list)
-        result["y_" + _type] = np.array(y_list)
+        result[_type] = {}
+        for label in labels:
+            with open(path + (file_format % (_type,label,name))) as f:
+                tweets = [line.rstrip().split("\t") for line in f]
+            print("loaded preprocessed tweets for %s:%s" % (label, len(tweets)))
+            result[_type][label] = tweets
 
     return result
 
-# splits the dataset into train, valid, test into txt files
-def save_preprocessed_data(data_name, hasValid=True, data_=None):
-    path = os.path.dirname(os.path.abspath(__file__)) + "/preprocessed/"
-    if not os.path.exists(path):
-        os.makedirs(path)
-    data_types = ["train", "test"]
-    if hasValid:
-        data_types.append("valid")
-
-    should_load_file = False
-    for data_type in data_types:
-        if not os.path.isfile(path + "%s_%s.txt" % (data_type, data_name)):
-            should_load_file = True
-            break
-    if should_load_file and data_ is not None:
-        for data_type in data_types:
-            file_name = "%s_%s.txt" % (data_type, data_name)
-            with open(path + file_name, "w") as f:
-                x, y = data_[data_type]
-                for i in range(len(x)):
-                    try:
-                        f.write("%s\t%s\n" % (x[i], y[i]))
-                    except UnicodeEncodeError:
-                        print("unicode encode error. skipping line")
-                print("Wrote on %s" % file_name)
-    else:
-        print("preprocessed file already exists in " + path)
