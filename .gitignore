@@ -10,3 +10,4 @@
 /data/sentiment/tweets_preprocessed.txt
 *.swp
 /logs/*
+/config
