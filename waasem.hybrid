@@ -1,0 +1,184 @@
+nohup: ignoring input
+Using TensorFlow backend.
+{'include_davidson': False, 'batch_size': 32, 'learning_rate': 0.0001, 'num_epochs': 10, 'model_name': 'hybrid_cnn', 'num_filters': 50, 'logdir': 'waasem/hybrid', 'word_filter_sizes': '1,2,3', 'char_filter_sizes': '3,4,5'}
+split:test, label:none, data shape:(1277, 40)
+split:test, label:abusive, data shape:(1878, 40)
+split:valid, label:none, data shape:(1276, 40)
+split:valid, label:abusive, data shape:(1876, 40)
+split:train, label:none, data shape:(10209, 40)
+split:train, label:abusive, data shape:(15010, 40)
+split:test, label:none, data shape:(1277, 140, 70)
+split:test, label:abusive, data shape:(1878, 140, 70)
+split:valid, label:none, data shape:(1276, 140, 70)
+split:valid, label:abusive, data shape:(1876, 140, 70)
+split:train, label:none, data shape:(10209, 140, 70)
+split:train, label:abusive, data shape:(15010, 140, 70)
+vocabulary loaded with 13859 words
+word_len: 40, char_len: 140
+____________________________________________________________________________________________________
+Layer (type)                     Output Shape          Param #     Connected to                     
+====================================================================================================
+input_1 (InputLayer)             (None, 40)            0                                            
+____________________________________________________________________________________________________
+embedding_1 (Embedding)          (None, 40, 300)       4157700     input_1[0][0]                    
+____________________________________________________________________________________________________
+input_2 (InputLayer)             (None, 140, 70)       0                                            
+____________________________________________________________________________________________________
+conv1d_1 (Conv1D)                (None, 40, 50)        15050       embedding_1[0][0]                
+____________________________________________________________________________________________________
+conv1d_2 (Conv1D)                (None, 39, 50)        30050       embedding_1[0][0]                
+____________________________________________________________________________________________________
+conv1d_3 (Conv1D)                (None, 38, 50)        45050       embedding_1[0][0]                
+____________________________________________________________________________________________________
+conv1d_4 (Conv1D)                (None, 138, 50)       10550       input_2[0][0]                    
+____________________________________________________________________________________________________
+conv1d_5 (Conv1D)                (None, 137, 50)       14050       input_2[0][0]                    
+____________________________________________________________________________________________________
+conv1d_6 (Conv1D)                (None, 136, 50)       17550       input_2[0][0]                    
+____________________________________________________________________________________________________
+max_pooling1d_1 (MaxPooling1D)   (None, 1, 50)         0           conv1d_1[0][0]                   
+____________________________________________________________________________________________________
+max_pooling1d_2 (MaxPooling1D)   (None, 1, 50)         0           conv1d_2[0][0]                   
+____________________________________________________________________________________________________
+max_pooling1d_3 (MaxPooling1D)   (None, 1, 50)         0           conv1d_3[0][0]                   
+____________________________________________________________________________________________________
+max_pooling1d_4 (MaxPooling1D)   (None, 1, 50)         0           conv1d_4[0][0]                   
+____________________________________________________________________________________________________
+max_pooling1d_5 (MaxPooling1D)   (None, 1, 50)         0           conv1d_5[0][0]                   
+____________________________________________________________________________________________________
+max_pooling1d_6 (MaxPooling1D)   (None, 1, 50)         0           conv1d_6[0][0]                   
+____________________________________________________________________________________________________
+flatten_1 (Flatten)              (None, 50)            0           max_pooling1d_1[0][0]            
+____________________________________________________________________________________________________
+flatten_2 (Flatten)              (None, 50)            0           max_pooling1d_2[0][0]            
+____________________________________________________________________________________________________
+flatten_3 (Flatten)              (None, 50)            0           max_pooling1d_3[0][0]            
+____________________________________________________________________________________________________
+flatten_4 (Flatten)              (None, 50)            0           max_pooling1d_4[0][0]            
+____________________________________________________________________________________________________
+flatten_5 (Flatten)              (None, 50)            0           max_pooling1d_5[0][0]            
+____________________________________________________________________________________________________
+flatten_6 (Flatten)              (None, 50)            0           max_pooling1d_6[0][0]            
+____________________________________________________________________________________________________
+concatenate_1 (Concatenate)      (None, 300)           0           flatten_1[0][0]                  
+                                                                   flatten_2[0][0]                  
+                                                                   flatten_3[0][0]                  
+                                                                   flatten_4[0][0]                  
+                                                                   flatten_5[0][0]                  
+                                                                   flatten_6[0][0]                  
+____________________________________________________________________________________________________
+dropout_1 (Dropout)              (None, 300)           0           concatenate_1[0][0]              
+____________________________________________________________________________________________________
+dense_1 (Dense)                  (None, 2)             602         dropout_1[0][0]                  
+====================================================================================================
+Total params: 4,290,602
+Trainable params: 4,290,602
+Non-trainable params: 0
+____________________________________________________________________________________________________
+Train on 15010 samples, validate on 1876 samples
+2017-07-17 10:59:01.342334: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.1 instructions, but these are available on your machine and could speed up CPU computations.
+2017-07-17 10:59:01.342377: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.2 instructions, but these are available on your machine and could speed up CPU computations.
+2017-07-17 10:59:01.342388: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX instructions, but these are available on your machine and could speed up CPU computations.
+2017-07-17 10:59:01.342397: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX2 instructions, but these are available on your machine and could speed up CPU computations.
+2017-07-17 10:59:01.342405: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use FMA instructions, but these are available on your machine and could speed up CPU computations.
+2017-07-17 10:59:01.893761: I tensorflow/core/common_runtime/gpu/gpu_device.cc:940] Found device 0 with properties: 
+name: Tesla M60
+major: 5 minor: 2 memoryClockRate (GHz) 1.1775
+pciBusID 0000:0a:00.0
+Total memory: 7.43GiB
+Free memory: 7.36GiB
+2017-07-17 10:59:01.893820: I tensorflow/core/common_runtime/gpu/gpu_device.cc:961] DMA: 0 
+2017-07-17 10:59:01.893845: I tensorflow/core/common_runtime/gpu/gpu_device.cc:971] 0:   Y 
+2017-07-17 10:59:01.893864: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1030] Creating TensorFlow device (/gpu:0) -> (device: 0, name: Tesla M60, pci bus id: 0000:0a:00.0)
+Epoch 1/10
+Generating Classification Report:
+  32/1876 [..............................] - ETA: 3s 384/1876 [=====>........................] - ETA: 0s 768/1876 [===========>..................] - ETA: 0s1152/1876 [=================>............] - ETA: 0s1536/1876 [=======================>......] - ETA: 0s
+             precision    recall  f1-score   support
+
+       none       0.80      0.94      0.86      1276
+    abusive       0.80      0.49      0.61       600
+
+avg / total       0.80      0.80      0.78      1876
+
+
+Epoch 00000: val_acc improved from -inf to 0.79744, saving model to /home/homes/jhpark/hate-speech/logs/waasem/hybrid/weights.00.hdf5
+12s - loss: 0.5568 - acc: 0.7290 - val_loss: 0.4582 - val_acc: 0.7974
+Epoch 2/10
+Generating Classification Report:
+  32/1876 [..............................] - ETA: 0s 480/1876 [======>.......................] - ETA: 0s 928/1876 [=============>................] - ETA: 0s1376/1876 [=====================>........] - ETA: 0s1792/1876 [===========================>..] - ETA: 0s
+             precision    recall  f1-score   support
+
+       none       0.83      0.92      0.87      1276
+    abusive       0.78      0.59      0.67       600
+
+avg / total       0.81      0.81      0.81      1876
+
+
+Epoch 00001: val_acc improved from 0.79744 to 0.81450, saving model to /home/homes/jhpark/hate-speech/logs/waasem/hybrid/weights.01.hdf5
+8s - loss: 0.4266 - acc: 0.8095 - val_loss: 0.4158 - val_acc: 0.8145
+Epoch 3/10
+Generating Classification Report:
+  32/1876 [..............................] - ETA: 0s 512/1876 [=======>......................] - ETA: 0s 928/1876 [=============>................] - ETA: 0s1376/1876 [=====================>........] - ETA: 0s1792/1876 [===========================>..] - ETA: 0s
+             precision    recall  f1-score   support
+
+       none       0.85      0.92      0.88      1276
+    abusive       0.78      0.64      0.71       600
+
+avg / total       0.83      0.83      0.82      1876
+
+
+Epoch 00002: val_acc improved from 0.81450 to 0.82942, saving model to /home/homes/jhpark/hate-speech/logs/waasem/hybrid/weights.02.hdf5
+8s - loss: 0.3750 - acc: 0.8311 - val_loss: 0.3970 - val_acc: 0.8294
+Epoch 4/10
+Generating Classification Report:
+  32/1876 [..............................] - ETA: 0s 512/1876 [=======>......................] - ETA: 0s 960/1876 [==============>...............] - ETA: 0s1376/1876 [=====================>........] - ETA: 0s1792/1876 [===========================>..] - ETA: 0s
+             precision    recall  f1-score   support
+
+       none       0.85      0.90      0.88      1276
+    abusive       0.76      0.67      0.71       600
+
+avg / total       0.82      0.83      0.83      1876
+
+
+Epoch 00003: val_acc did not improve
+7s - loss: 0.3307 - acc: 0.8518 - val_loss: 0.3874 - val_acc: 0.8284
+Epoch 5/10
+Generating Classification Report:
+  32/1876 [..............................] - ETA: 0s 480/1876 [======>.......................] - ETA: 0s 896/1876 [=============>................] - ETA: 0s1312/1876 [===================>..........] - ETA: 0s1728/1876 [==========================>...] - ETA: 0s
+             precision    recall  f1-score   support
+
+       none       0.86      0.90      0.88      1276
+    abusive       0.76      0.68      0.72       600
+
+avg / total       0.83      0.83      0.83      1876
+
+
+Epoch 00004: val_acc improved from 0.82942 to 0.82996, saving model to /home/homes/jhpark/hate-speech/logs/waasem/hybrid/weights.04.hdf5
+8s - loss: 0.2891 - acc: 0.8786 - val_loss: 0.3911 - val_acc: 0.8300
+Epoch 6/10
+Generating Classification Report:
+  32/1876 [..............................] - ETA: 0s 480/1876 [======>.......................] - ETA: 0s 928/1876 [=============>................] - ETA: 0s1376/1876 [=====================>........] - ETA: 0s1792/1876 [===========================>..] - ETA: 0s
+             precision    recall  f1-score   support
+
+       none       0.85      0.90      0.87      1276
+    abusive       0.75      0.66      0.71       600
+
+avg / total       0.82      0.82      0.82      1876
+
+
+Epoch 00005: val_acc did not improve
+7s - loss: 0.2538 - acc: 0.8980 - val_loss: 0.4036 - val_acc: 0.8230
+Epoch 7/10
+Generating Classification Report:
+  32/1876 [..............................] - ETA: 0s 448/1876 [======>.......................] - ETA: 0s 864/1876 [============>.................] - ETA: 0s1248/1876 [==================>...........] - ETA: 0s1664/1876 [=========================>....] - ETA: 0s
+             precision    recall  f1-score   support
+
+       none       0.86      0.88      0.87      1276
+    abusive       0.73      0.69      0.71       600
+
+avg / total       0.82      0.82      0.82      1876
+
+
+Epoch 00006: val_acc did not improve
+8s - loss: 0.2241 - acc: 0.9112 - val_loss: 0.4191 - val_acc: 0.8214
+Training Finished

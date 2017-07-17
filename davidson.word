@@ -1,0 +1,116 @@
+nohup: ignoring input
+Using TensorFlow backend.
+{'num_epochs': 10, 'model_name': 'word_cnn', 'batch_size': 32, 'filter_sizes': '1,2,3', 'num_filters': 50, 'include_davidson': True, 'learning_rate': 0.0001, 'logdir': 'davidson/word'}
+split:train, label:none, data shape:(13539, 40)
+split:train, label:abusive, data shape:(34886, 40)
+split:test, label:none, data shape:(1694, 40)
+split:test, label:abusive, data shape:(4357, 40)
+split:valid, label:none, data shape:(1734, 40)
+split:valid, label:abusive, data shape:(4417, 40)
+vocabulary loaded with 13859 words
+sequence_length: 40
+____________________________________________________________________________________________________
+Layer (type)                     Output Shape          Param #     Connected to                     
+====================================================================================================
+input_1 (InputLayer)             (None, 40)            0                                            
+____________________________________________________________________________________________________
+embedding_1 (Embedding)          (None, 40, 300)       4157700     input_1[0][0]                    
+____________________________________________________________________________________________________
+conv1d_1 (Conv1D)                (None, 40, 50)        15050       embedding_1[0][0]                
+____________________________________________________________________________________________________
+conv1d_2 (Conv1D)                (None, 39, 50)        30050       embedding_1[0][0]                
+____________________________________________________________________________________________________
+conv1d_3 (Conv1D)                (None, 38, 50)        45050       embedding_1[0][0]                
+____________________________________________________________________________________________________
+max_pooling1d_1 (MaxPooling1D)   (None, 1, 50)         0           conv1d_1[0][0]                   
+____________________________________________________________________________________________________
+max_pooling1d_2 (MaxPooling1D)   (None, 1, 50)         0           conv1d_2[0][0]                   
+____________________________________________________________________________________________________
+max_pooling1d_3 (MaxPooling1D)   (None, 1, 50)         0           conv1d_3[0][0]                   
+____________________________________________________________________________________________________
+flatten_1 (Flatten)              (None, 50)            0           max_pooling1d_1[0][0]            
+____________________________________________________________________________________________________
+flatten_2 (Flatten)              (None, 50)            0           max_pooling1d_2[0][0]            
+____________________________________________________________________________________________________
+flatten_3 (Flatten)              (None, 50)            0           max_pooling1d_3[0][0]            
+____________________________________________________________________________________________________
+concatenate_1 (Concatenate)      (None, 150)           0           flatten_1[0][0]                  
+                                                                   flatten_2[0][0]                  
+                                                                   flatten_3[0][0]                  
+____________________________________________________________________________________________________
+dropout_1 (Dropout)              (None, 150)           0           concatenate_1[0][0]              
+____________________________________________________________________________________________________
+dense_1 (Dense)                  (None, 2)             302         dropout_1[0][0]                  
+====================================================================================================
+Total params: 4,248,152
+Trainable params: 4,248,152
+Non-trainable params: 0
+____________________________________________________________________________________________________
+Train on 34886 samples, validate on 4417 samples
+2017-07-17 10:58:28.376009: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.1 instructions, but these are available on your machine and could speed up CPU computations.
+2017-07-17 10:58:28.376060: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.2 instructions, but these are available on your machine and could speed up CPU computations.
+2017-07-17 10:58:28.376071: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX instructions, but these are available on your machine and could speed up CPU computations.
+2017-07-17 10:58:28.376079: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX2 instructions, but these are available on your machine and could speed up CPU computations.
+2017-07-17 10:58:28.376087: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use FMA instructions, but these are available on your machine and could speed up CPU computations.
+2017-07-17 10:58:28.932032: I tensorflow/core/common_runtime/gpu/gpu_device.cc:940] Found device 0 with properties: 
+name: Tesla M60
+major: 5 minor: 2 memoryClockRate (GHz) 1.1775
+pciBusID 0000:86:00.0
+Total memory: 7.43GiB
+Free memory: 7.36GiB
+2017-07-17 10:58:28.932087: I tensorflow/core/common_runtime/gpu/gpu_device.cc:961] DMA: 0 
+2017-07-17 10:58:28.932100: I tensorflow/core/common_runtime/gpu/gpu_device.cc:971] 0:   Y 
+2017-07-17 10:58:28.932120: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1030] Creating TensorFlow device (/gpu:0) -> (device: 0, name: Tesla M60, pci bus id: 0000:86:00.0)
+Epoch 1/10
+Generating Classification Report:
+  32/4417 [..............................] - ETA: 4s 928/4417 [=====>........................] - ETA: 0s1856/4417 [===========>..................] - ETA: 0s2816/4417 [==================>...........] - ETA: 0s3712/4417 [========================>.....] - ETA: 0s
+             precision    recall  f1-score   support
+
+       none       0.81      0.92      0.86      1734
+    abusive       0.94      0.86      0.90      2683
+
+avg / total       0.89      0.88      0.89      4417
+
+
+Epoch 00000: val_acc improved from -inf to 0.88499, saving model to /home/homes/jhpark/hate-speech/logs/davidson/word/weights.00.hdf5
+14s - loss: 0.3738 - acc: 0.8251 - val_loss: 0.2742 - val_acc: 0.8850
+Epoch 2/10
+Generating Classification Report:
+  32/4417 [..............................] - ETA: 0s 896/4417 [=====>........................] - ETA: 0s1760/4417 [==========>...................] - ETA: 0s2688/4417 [=================>............] - ETA: 0s3584/4417 [=======================>......] - ETA: 0s
+             precision    recall  f1-score   support
+
+       none       0.84      0.90      0.87      1734
+    abusive       0.94      0.89      0.91      2683
+
+avg / total       0.90      0.89      0.90      4417
+
+
+Epoch 00001: val_acc improved from 0.88499 to 0.89450, saving model to /home/homes/jhpark/hate-speech/logs/davidson/word/weights.01.hdf5
+13s - loss: 0.2444 - acc: 0.8963 - val_loss: 0.2557 - val_acc: 0.8945
+Epoch 3/10
+Generating Classification Report:
+  32/4417 [..............................] - ETA: 0s 960/4417 [=====>........................] - ETA: 0s1952/4417 [============>.................] - ETA: 0s2848/4417 [==================>...........] - ETA: 0s3744/4417 [========================>.....] - ETA: 0s
+             precision    recall  f1-score   support
+
+       none       0.85      0.88      0.86      1734
+    abusive       0.92      0.90      0.91      2683
+
+avg / total       0.89      0.89      0.89      4417
+
+
+Epoch 00002: val_acc did not improve
+13s - loss: 0.2073 - acc: 0.9122 - val_loss: 0.2537 - val_acc: 0.8893
+Epoch 4/10
+Generating Classification Report:
+  32/4417 [..............................] - ETA: 0s1056/4417 [======>.......................] - ETA: 0s2048/4417 [============>.................] - ETA: 0s3040/4417 [===================>..........] - ETA: 0s4064/4417 [==========================>...] - ETA: 0s
+             precision    recall  f1-score   support
+
+       none       0.84      0.89      0.87      1734
+    abusive       0.93      0.89      0.91      2683
+
+avg / total       0.89      0.89      0.89      4417
+
+
+Epoch 00003: val_acc did not improve
+12s - loss: 0.1774 - acc: 0.9295 - val_loss: 0.2626 - val_acc: 0.8911
+Training Finished

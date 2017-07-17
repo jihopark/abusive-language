@@ -1,0 +1,143 @@
+nohup: ignoring input
+Using TensorFlow backend.
+{'batch_size': 32, 'learning_rate': 0.0001, 'logdir': 'waasem/word', 'filter_sizes': '1,2,3', 'num_filters': 50, 'model_name': 'word_cnn', 'include_davidson': False, 'num_epochs': 10}
+split:valid, label:none, data shape:(1276, 40)
+split:valid, label:abusive, data shape:(1876, 40)
+split:test, label:none, data shape:(1277, 40)
+split:test, label:abusive, data shape:(1878, 40)
+split:train, label:none, data shape:(10209, 40)
+split:train, label:abusive, data shape:(15010, 40)
+vocabulary loaded with 13859 words
+sequence_length: 40
+____________________________________________________________________________________________________
+Layer (type)                     Output Shape          Param #     Connected to                     
+====================================================================================================
+input_1 (InputLayer)             (None, 40)            0                                            
+____________________________________________________________________________________________________
+embedding_1 (Embedding)          (None, 40, 300)       4157700     input_1[0][0]                    
+____________________________________________________________________________________________________
+conv1d_1 (Conv1D)                (None, 40, 50)        15050       embedding_1[0][0]                
+____________________________________________________________________________________________________
+conv1d_2 (Conv1D)                (None, 39, 50)        30050       embedding_1[0][0]                
+____________________________________________________________________________________________________
+conv1d_3 (Conv1D)                (None, 38, 50)        45050       embedding_1[0][0]                
+____________________________________________________________________________________________________
+max_pooling1d_1 (MaxPooling1D)   (None, 1, 50)         0           conv1d_1[0][0]                   
+____________________________________________________________________________________________________
+max_pooling1d_2 (MaxPooling1D)   (None, 1, 50)         0           conv1d_2[0][0]                   
+____________________________________________________________________________________________________
+max_pooling1d_3 (MaxPooling1D)   (None, 1, 50)         0           conv1d_3[0][0]                   
+____________________________________________________________________________________________________
+flatten_1 (Flatten)              (None, 50)            0           max_pooling1d_1[0][0]            
+____________________________________________________________________________________________________
+flatten_2 (Flatten)              (None, 50)            0           max_pooling1d_2[0][0]            
+____________________________________________________________________________________________________
+flatten_3 (Flatten)              (None, 50)            0           max_pooling1d_3[0][0]            
+____________________________________________________________________________________________________
+concatenate_1 (Concatenate)      (None, 150)           0           flatten_1[0][0]                  
+                                                                   flatten_2[0][0]                  
+                                                                   flatten_3[0][0]                  
+____________________________________________________________________________________________________
+dropout_1 (Dropout)              (None, 150)           0           concatenate_1[0][0]              
+____________________________________________________________________________________________________
+dense_1 (Dense)                  (None, 2)             302         dropout_1[0][0]                  
+====================================================================================================
+Total params: 4,248,152
+Trainable params: 4,248,152
+Non-trainable params: 0
+____________________________________________________________________________________________________
+Train on 15010 samples, validate on 1876 samples
+2017-07-17 10:58:16.230466: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.1 instructions, but these are available on your machine and could speed up CPU computations.
+2017-07-17 10:58:16.230505: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use SSE4.2 instructions, but these are available on your machine and could speed up CPU computations.
+2017-07-17 10:58:16.230516: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX instructions, but these are available on your machine and could speed up CPU computations.
+2017-07-17 10:58:16.230523: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use AVX2 instructions, but these are available on your machine and could speed up CPU computations.
+2017-07-17 10:58:16.230531: W tensorflow/core/platform/cpu_feature_guard.cc:45] The TensorFlow library wasn't compiled to use FMA instructions, but these are available on your machine and could speed up CPU computations.
+2017-07-17 10:58:16.784363: I tensorflow/core/common_runtime/gpu/gpu_device.cc:940] Found device 0 with properties: 
+name: Tesla M60
+major: 5 minor: 2 memoryClockRate (GHz) 1.1775
+pciBusID 0000:89:00.0
+Total memory: 7.43GiB
+Free memory: 7.36GiB
+2017-07-17 10:58:16.784416: I tensorflow/core/common_runtime/gpu/gpu_device.cc:961] DMA: 0 
+2017-07-17 10:58:16.784428: I tensorflow/core/common_runtime/gpu/gpu_device.cc:971] 0:   Y 
+2017-07-17 10:58:16.784444: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1030] Creating TensorFlow device (/gpu:0) -> (device: 0, name: Tesla M60, pci bus id: 0000:89:00.0)
+Epoch 1/10
+Generating Classification Report:
+  32/1876 [..............................] - ETA: 2s 960/1876 [==============>...............] - ETA: 0s1876/1876 [==============================] - 0s     
+
+             precision    recall  f1-score   support
+
+       none       0.80      0.94      0.86      1276
+    abusive       0.79      0.51      0.62       600
+
+avg / total       0.80      0.80      0.79      1876
+
+
+Epoch 00000: val_acc improved from -inf to 0.80011, saving model to /home/homes/jhpark/hate-speech/logs/waasem/word/weights.00.hdf5
+6s - loss: 0.5539 - acc: 0.7358 - val_loss: 0.4594 - val_acc: 0.8001
+Epoch 2/10
+Generating Classification Report:
+  32/1876 [..............................] - ETA: 0s 992/1876 [==============>...............] - ETA: 0s
+             precision    recall  f1-score   support
+
+       none       0.83      0.92      0.87      1276
+    abusive       0.78      0.60      0.68       600
+
+avg / total       0.81      0.82      0.81      1876
+
+
+Epoch 00001: val_acc improved from 0.80011 to 0.81823, saving model to /home/homes/jhpark/hate-speech/logs/waasem/word/weights.01.hdf5
+5s - loss: 0.4282 - acc: 0.8075 - val_loss: 0.4221 - val_acc: 0.8182
+Epoch 3/10
+Generating Classification Report:
+  32/1876 [..............................] - ETA: 0s 992/1876 [==============>...............] - ETA: 0s
+             precision    recall  f1-score   support
+
+       none       0.85      0.91      0.88      1276
+    abusive       0.78      0.65      0.70       600
+
+avg / total       0.82      0.83      0.82      1876
+
+
+Epoch 00002: val_acc improved from 0.81823 to 0.82676, saving model to /home/homes/jhpark/hate-speech/logs/waasem/word/weights.02.hdf5
+5s - loss: 0.3739 - acc: 0.8300 - val_loss: 0.4065 - val_acc: 0.8268
+Epoch 4/10
+Generating Classification Report:
+  32/1876 [..............................] - ETA: 0s1056/1876 [===============>..............] - ETA: 0s
+             precision    recall  f1-score   support
+
+       none       0.85      0.90      0.88      1276
+    abusive       0.76      0.66      0.71       600
+
+avg / total       0.82      0.83      0.82      1876
+
+
+Epoch 00003: val_acc improved from 0.82676 to 0.82676, saving model to /home/homes/jhpark/hate-speech/logs/waasem/word/weights.03.hdf5
+5s - loss: 0.3280 - acc: 0.8525 - val_loss: 0.3976 - val_acc: 0.8268
+Epoch 5/10
+Generating Classification Report:
+  32/1876 [..............................] - ETA: 0s1088/1876 [================>.............] - ETA: 0s
+             precision    recall  f1-score   support
+
+       none       0.85      0.90      0.87      1276
+    abusive       0.76      0.66      0.70       600
+
+avg / total       0.82      0.82      0.82      1876
+
+
+Epoch 00004: val_acc did not improve
+5s - loss: 0.2852 - acc: 0.8811 - val_loss: 0.3994 - val_acc: 0.8225
+Epoch 6/10
+Generating Classification Report:
+  32/1876 [..............................] - ETA: 0s1024/1876 [===============>..............] - ETA: 0s
+             precision    recall  f1-score   support
+
+       none       0.85      0.89      0.87      1276
+    abusive       0.74      0.65      0.69       600
+
+avg / total       0.81      0.82      0.81      1876
+
+
+Epoch 00005: val_acc did not improve
+5s - loss: 0.2490 - acc: 0.8993 - val_loss: 0.4085 - val_acc: 0.8161
+Training Finished
