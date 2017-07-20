@@ -33,7 +33,7 @@ def make_into_categorical(original_data, labels):
 
     return data
 
-def load_abusive_binary(_type, include_davidson=True):
+def load_abusive_binary(_type, include_davidson=True, include_relabel=True):
 
     if _type in ["char", "word"]:
         path = "./data/%s_outputs/" % _type
@@ -63,6 +63,11 @@ def load_abusive_binary(_type, include_davidson=True):
     else:
         for split in splits:
             data_w[split]["abusive"] = np.vstack((data_w[split]["sexism"], data_w[split]["racism"]))
+
+    if include_relabel:
+        data_relabel = np.load(path + "train_none_relabel.npy")
+        data_w["train"]["none"] = np.vstack((data_w["train"]["none"], data_relabel))
+        print("added relabel to training set")
 
     labels = ["none", "abusive"]
     return make_into_categorical(data_w, labels), labels
