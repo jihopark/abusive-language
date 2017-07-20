@@ -3,6 +3,10 @@ import re
 import numpy as np
 import pandas as pd
 from nltk.tokenize import TweetTokenizer
+from wordsegment import segment
+
+
+FLAGS = re.MULTILINE | re.DOTALL
 
 # minimum word count for a tweet. tweet less than this will be removed
 MIN_WORDS = 2
@@ -14,19 +18,30 @@ def is_url(s):
     urls = re.findall(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', s)
     return len(urls) > 0
 
-def preprocess_tweet(tweet):
-    try:
-        if tweet[0:2] == "RT":
-            tweet = tweet[2:]
-        tokens = tknzr.tokenize(tweet)
-        tokens = filter(lambda x: x[0] != "@" and not is_url(x), tokens) # remove mentions or urls
-        tokens = map(lambda x: x[1:] if x[0] == "#" else x, tokens) # remove # from hashtags
-    except UnicodeDecodeError:
-        print("unicode decode error")
-        return ""
-    except TypeError:
-        print ("type error")
-        return ""
+def preprocess_tweet(text):
+    # Different regex parts for smiley faces
+    eyes = r"[8:=;]"
+    nose = r"['`\-]?"
+
+    # function so code less repetitive
+    def re_sub(pattern, repl):
+        return re.sub(pattern, repl, text, flags=FLAGS)
+
+    text = re_sub(r"https?:\/\/\S+\b|www\.(\w+\.)+\S*", "<url>")
+    text = re_sub(r"/"," / ")
+    text = re_sub(r"@\w+", "<user>")
+    text = re_sub(r"{}{}[)dD]+|[)dD]+{}{}".format(eyes, nose, nose, eyes), "<smile>")
+    text = re_sub(r"{}{}p+".format(eyes, nose), "<lolface>")
+    text = re_sub(r"{}{}\(+|\)+{}{}".format(eyes, nose, nose, eyes), "<sadface>")
+    text = re_sub(r"{}{}[\/|l*]".format(eyes, nose), "<neutralface>")
+    text = re_sub(r"<3","<heart>")
+    text = re_sub(r"[-+]?[.\d]*[\d]+[:,.\d]*", "<number>")
+    text = re_sub(r"([!?.]){2,}", r"\1 <repeat>")
+    text = re_sub(r"\b(\S*?)(.)\2{2,}\b", r"\1\2 <elong>")
+    text = re_sub(r"#\S+", lambda hashtag: " ".join(segment(hashtag.group()[1:]))) # segment hastags
+
+
+    tokens = tknzr.tokenize(text.lower())
     return "\t".join(tokens)
 
 def dataframe_to_list(df):
@@ -85,10 +100,12 @@ def load_from_file(name, labels):
     for _type in data_types:
         result[_type] = {}
         for label in labels:
-            with open(path + (file_format % (_type,label,name))) as f:
-                tweets = [line.rstrip().split("\t") for line in f]
-            print("loaded preprocessed tweets for %s:%s" % (label, len(tweets)))
-            result[_type][label] = tweets
-
+            try:
+                with open(path + (file_format % (_type,label,name))) as f:
+                    tweets = [line.rstrip().split("\t") for line in f]
+                print("loaded preprocessed tweets for %s:%s" % (label, len(tweets)))
+                result[_type][label] = tweets
+            except FileNotFoundError:
+                print("cannot open split %s" % _type)
     return result
 
