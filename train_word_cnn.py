@@ -15,7 +15,7 @@ from model.word_cnn import WordCNN
 
 CONFIG_KEYS = [ # training parameters
                "batch_size", "num_epochs", "learning_rate",
-               "include_davidson",
+               "include_davidson", "sexism_vs_rest",
                # model parameters
                "filter_sizes", "num_filters",
                "use_embedding_layer", "train_embedding", "use_pretrain_embedding",
@@ -38,10 +38,15 @@ log_path = os.path.dirname(os.path.abspath(__file__)) +  "/logs/" + log_folder
 
 # loading data
 
-data, labels = data_helper.load_abusive_binary("word",
-                                                FLAGS["include_davidson"],
-                                                vectors=(not
-                                                    FLAGS["use_embedding_layer"]))
+if FLAGS["sexism_vs_rest"]:
+    data, labels = data_helper.load_sexism_vs_rest("word", 
+                                                    vectors=(not
+                                                        FLAGS["use_embedding_layer"]))
+else:
+    data, labels = data_helper.load_abusive_binary("word",
+                                                    FLAGS["include_davidson"],
+                                                    vectors=(not
+                                                        FLAGS["use_embedding_layer"]))
 
 with open("./data/word_outputs/vocab.pkl", "rb") as f:
     vocab = pickle.load(f)

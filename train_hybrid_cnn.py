@@ -15,7 +15,7 @@ from model.hybrid_cnn import HybridCNN
 
 CONFIG_KEYS = [ # training parameters
                "batch_size", "num_epochs", "learning_rate",
-               "include_davidson",
+               "include_davidson", "sexism_vs_rest",
                # model parameters
                "word_filter_sizes", "char_filter_sizes",
                "num_filters",
@@ -38,13 +38,18 @@ log_folder = FLAGS["logdir"] if FLAGS["logdir"] else str(int(time.time()))
 log_path = os.path.dirname(os.path.abspath(__file__)) +  "/logs/" + log_folder
 
 # loading data
+if FLAGS["sexism_vs_rest"]:
+    data_word, labels = data_helper.load_sexism_vs_rest("word",
+                                                    vectors=(not
+                                                        FLAGS["use_embedding_layer"]))
+    data_char, _ = data_helper.load_sexism_vs_rest("char")
+else:
+    data_word, labels = data_helper.load_abusive_binary("word",
+                                                    FLAGS["include_davidson"],
+                                                    vectors=(not FLAGS["use_embedding_layer"]))
 
-data_word, labels = data_helper.load_abusive_binary("word",
-                                                FLAGS["include_davidson"],
-                                                vectors=(not FLAGS["use_embedding_layer"]))
-
-data_char, _ = data_helper.load_abusive_binary("char",
-                                               FLAGS["include_davidson"])
+    data_char, _ = data_helper.load_abusive_binary("char",
+                                                   FLAGS["include_davidson"])
 
 
 with open("./data/word_outputs/vocab.pkl", "rb") as f:

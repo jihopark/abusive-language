@@ -91,6 +91,27 @@ def load_abusive_binary(_type, include_davidson=True, include_relabel=True,
         data = convert_id_to_vectors(data, embedding_matrix)
     return data, labels
 
+def load_sexism_vs_rest(_type, vectors=False):
+
+    if _type in ["char", "word"]:
+        path = "./data/%s_outputs/" % _type
+    else:
+        raise ValueError("wrong type")
+
+    data_w = load_waasem(path)
+
+    for split in splits:
+        data_w[split]["rest"] = np.vstack((data_w[split]["none"], data_w[split]["racism"]))
+
+    labels = ["sexism", "rest"]
+    data = make_into_categorical(data_w, labels)
+
+    if vectors:
+        embedding_matrix = np.load("./data/word_outputs/glove_embedding.npy")
+        data = convert_id_to_vectors(data, embedding_matrix)
+    return data, labels
+
+
 def load_mixed_testset(_type):
     if _type in ["char", "word"]:
         path = "./data/%s_outputs/" % _type
