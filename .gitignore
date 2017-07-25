@@ -6,6 +6,7 @@
 /data/char_outputs
 /data/word_outputs
 /data/preprocessed
+/data/crawled
 /data/GoogleNews-vectors-negative300.bin
 /data/sentiment/tweets_preprocessed.txt
 *.swp
