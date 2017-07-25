@@ -14,6 +14,6 @@ def load(name, keys):
         for key in keys:
             if key != "config_file":
                 if key not in config:
-                    raise ValueError("Config file should have all files")
+                    raise ValueError("Config file missing param " + key)
     return config
 

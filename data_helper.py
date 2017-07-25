@@ -40,7 +40,7 @@ def make_into_categorical(original_data, labels):
             else:
                 data[x] = _data
             print("split:%s, label:%s, data shape:%s" %
-                  (split, label, str(data[x].shape)))
+                  (split, label, str(_data.shape)))
             data[y] += [i for _ in range(len(_data))]
         data[y] = to_categorical(data[y], num_classes=len(labels))
 
