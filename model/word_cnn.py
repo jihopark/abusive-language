@@ -17,13 +17,26 @@ class WordCNN(object):
             filter_sizes, num_filters,
             embedding_size=300,
             dropout_prob=0,
-            embedding_static=False,
+            use_embedding_layer=True,
+            train_embedding=True,
+            embedding_matrix=None,
             learning_rate=0.001):
-        inputs = Input(shape=(sequence_length,))
-        embedding_layer = Embedding(input_dim=vocab_size,
-                                    output_dim=embedding_size,
-                                    trainable=(not embedding_static))(inputs)
 
+        if use_embedding_layer:
+            inputs = Input(shape=(sequence_length,))
+
+            if embedding_matrix is not None:
+                embedding_layer = Embedding(input_dim=vocab_size,
+                                            output_dim=embedding_size,
+                                            trainable=train_embedding,
+                                            weights=[embedding_matrix])(inputs)
+            else:
+                embedding_layer = Embedding(input_dim=vocab_size,
+                                            output_dim=embedding_size,
+                                        trainable=train_embedding)(inputs)
+        else:
+            inputs = Input(shape=(sequence_length, embedding_size))
+            embedding_layer = inputs
 
         conv_blocks = []
         for filter_size in filter_sizes:

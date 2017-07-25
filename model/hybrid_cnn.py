@@ -15,18 +15,32 @@ class HybridCNN(object):
             word_filter_sizes,
             char_filter_sizes,
             num_filters,
-            embedding_size=300,
+            embedding_size=200,
             dropout_prob=0,
-            embedding_static=False,
+            use_embedding_layer=True,
+            train_embedding=False,
+            embedding_matrix=None,
             learning_rate=0.001):
 
-        input_word = Input(shape=(word_len,))
         input_char = Input(shape=(char_len, char_vocab_size))
+        if use_embedding_layer:
+            input_word = Input(shape=(word_len,))
+            if embedding_matrix is not None:
+                embedding_layer = Embedding(input_dim=word_vocab_size,
+                                            output_dim=embedding_size,
+                                            trainable=train_embedding,
+                                            weights=[embedding_matrix]
+                                            )(input_word)
 
-        embedding_layer = Embedding(input_dim=word_vocab_size,
-                                    output_dim=embedding_size,
-                                    trainable=(not embedding_static)
-                                    )(input_word)
+            else:
+                embedding_layer = Embedding(input_dim=word_vocab_size,
+                                            output_dim=embedding_size,
+                                            trainable=train_embedding
+                                            )(input_word)
+        else:
+            input_word = Input(shape=(word_len, embedding_size))
+            embedding_layer = input_word
+
         # word cnn layers
         conv_blocks = []
         for filter_size in word_filter_sizes:

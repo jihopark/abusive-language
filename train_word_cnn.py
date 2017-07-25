@@ -14,10 +14,11 @@ import data_helper
 from model.word_cnn import WordCNN
 
 CONFIG_KEYS = [ # training parameters
-               "batch_size", "num_epochs", "learning_rate", 
+               "batch_size", "num_epochs", "learning_rate",
                "include_davidson",
                # model parameters
                "filter_sizes", "num_filters",
+               "use_embedding_layer", "train_embedding", "use_pretrain_embedding",
                # others
                "logdir", "model_name"]
 
@@ -38,13 +39,21 @@ log_path = os.path.dirname(os.path.abspath(__file__)) +  "/logs/" + log_folder
 # loading data
 
 data, labels = data_helper.load_abusive_binary("word",
-                                                FLAGS["include_davidson"])
+                                                FLAGS["include_davidson"],
+                                                vectors=(not
+                                                    FLAGS["use_embedding_layer"]))
 
 with open("./data/word_outputs/vocab.pkl", "rb") as f:
     vocab = pickle.load(f)
     vocab_size = len(vocab["word2id"].keys())
     print("vocabulary loaded with %s words" % vocab_size)
 
+embedding_matrix = None
+if FLAGS["use_pretrain_embedding"]:
+    embedding_matrix = np.load("./data/word_outputs/glove_embedding.npy")
+    assert embedding_matrix.shape[0] == vocab_size
+    assert embedding_matrix.shape[1] ==  200
+    print("loaded pretrained embedding")
 # defining model
 
 K.set_learning_phase(1)
@@ -57,7 +66,10 @@ model = WordCNN(sequence_length=sequence_length,
                 vocab_size=vocab_size,
                 filter_sizes=list(map(int, FLAGS["filter_sizes"].split(","))),
                 num_filters=FLAGS["num_filters"],
-                embedding_size=300,
+                embedding_size=200,
+                use_embedding_layer=FLAGS["use_embedding_layer"],
+                embedding_matrix=embedding_matrix,
+                train_embedding=FLAGS["train_embedding"],
                 learning_rate=FLAGS["learning_rate"])
 
 # define keras training procedure
