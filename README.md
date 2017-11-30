@@ -1,4 +1,11 @@
-# Abusive Language
+# One-step and Two-step Classification for Abusive Language Detection on Twitter
+- paper published at ALW1: 1st Workshop on Abusive Language Online to be held at the annual meeting of the Association of Computational Linguistics (ACL) 2017 (Vancouver, Canada), August 4th, 2017
+
+## Abstract (Park & Fung, 2017)
+```
+Automatic abusive language detection is a difficult but important task for online social media. Our research explores a two-step approach of performing classification on abusive language and then classifying into specific types and compares it with one-step approach of doing one multi-class classification for detecting sexist and racist languages. With a public English Twitter corpus of 20 thousand tweets in the type of sexism and racism, our approach shows a promising performance of 0.827 F-measure by using HybridCNN in one-step and 0.824 F-measure by using logistic regression in two-steps. 
+```
+see whole paper at `http://aclweb.org/anthology/W17-3006`
 
 ## Requirements
 - python 3.4
